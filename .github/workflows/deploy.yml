@@ -1,0 +1,36 @@
+name: Deploy Lawn Plan
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-site:
+    name: Deploy Static Site
+    runs-on: ubuntu-latest
+    if: contains(toJSON(github.event.commits.*.modified), 'site/') || contains(toJSON(github.event.commits.*.added), 'site/') || contains(github.event.head_commit.message, 'deploy all')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./site/
+          server-dir: ${{ secrets.FTP_REMOTE_PATH }}
+
+  deploy-worker:
+    name: Deploy Cloudflare Worker
+    runs-on: ubuntu-latest
+    if: contains(toJSON(github.event.commits.*.modified), 'worker/') || contains(toJSON(github.event.commits.*.added), 'worker/') || contains(github.event.head_commit.message, 'deploy all')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker

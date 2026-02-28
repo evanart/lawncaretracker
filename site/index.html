@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Lawn Plan</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --green: #22c55e;
+  --green-light: #dcfce7;
+  --red: #ef4444;
+  --red-light: #fef2f2;
+  --amber: #f59e0b;
+  --amber-light: #fffbeb;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-800);
+  line-height: 1.5;
+  padding-bottom: 80px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hero / Status Banner */
+.hero {
+  padding: 24px 20px 20px;
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+}
+.hero-date {
+  font-size: 13px;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.hero-next {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+.hero-sub {
+  font-size: 14px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-block;
+}
+.hero-sub.on-track { background: var(--green-light); color: #166534; }
+.hero-sub.due-soon { background: var(--amber-light); color: #92400e; }
+.hero-sub.overdue { background: var(--red-light); color: #991b1b; }
+
+/* Cards */
+.card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin: 16px;
+  overflow: hidden;
+}
+.card-header {
+  padding: 16px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--gray-700);
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+.card-header .chevron {
+  transition: transform 0.2s;
+  color: var(--gray-400);
+}
+.card-header.collapsed .chevron { transform: rotate(-90deg); }
+.card-body { padding: 16px; }
+.card-body.collapsed { display: none; }
+
+/* Current Task Card */
+.current-task {
+  border-left: 4px solid var(--green);
+}
+.current-task.due-soon { border-left-color: var(--amber); }
+.current-task.overdue { border-left-color: var(--red); }
+
+.task-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.task-meta { font-size: 13px; color: var(--gray-500); margin-bottom: 12px; }
+.task-meta span { margin-right: 12px; }
+.task-desc { font-size: 14px; color: var(--gray-600); margin-bottom: 12px; line-height: 1.6; }
+.task-materials {
+  font-size: 13px;
+  color: var(--gray-600);
+  background: var(--gray-50);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+.task-materials strong { color: var(--gray-700); }
+.task-materials ul { margin: 4px 0 0 16px; }
+
+.task-actions {
+  display: flex;
+  gap: 10px;
+}
+.btn {
+  flex: 1;
+  padding: 14px 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: opacity 0.15s;
+  min-height: 48px;
+}
+.btn:active { opacity: 0.8; }
+.btn-done { background: var(--green); color: white; }
+.btn-skip { background: var(--gray-100); color: var(--gray-700); }
+
+/* AI Response Toast */
+.ai-toast {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px;
+  transform: translateY(-100%);
+  transition: transform 0.3s ease;
+}
+.ai-toast.visible { transform: translateY(0); }
+.ai-toast-inner {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 16px;
+  border-left: 4px solid var(--green);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.ai-toast-response {
+  font-size: 15px;
+  color: var(--gray-700);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.ai-toast-changes {
+  font-size: 12px;
+  color: var(--gray-500);
+}
+.ai-toast-changes li { margin-bottom: 2px; }
+.ai-toast-dismiss {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--gray-200);
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Timeline */
+.timeline-group-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 12px 0 6px;
+}
+.timeline-task {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-100);
+  cursor: pointer;
+}
+.timeline-task:last-child { border-bottom: none; }
+.timeline-task-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.timeline-task-status { font-size: 16px; flex-shrink: 0; }
+.timeline-task-name {
+  font-size: 14px;
+  font-weight: 500;
+  flex: 1;
+}
+.timeline-task-date {
+  font-size: 12px;
+  color: var(--gray-400);
+}
+.timeline-task.done .timeline-task-name {
+  color: var(--gray-400);
+  text-decoration: line-through;
+}
+.timeline-task-details {
+  display: none;
+  padding: 10px 0 4px 28px;
+  font-size: 13px;
+  color: var(--gray-600);
+  line-height: 1.6;
+}
+.timeline-task.expanded .timeline-task-details { display: block; }
+
+/* Stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.stat-item {
+  background: var(--gray-50);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+.stat-value { font-size: 22px; font-weight: 700; color: var(--gray-900); }
+.stat-label { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+.stat-item.full-width { grid-column: 1 / -1; }
+
+/* Activity Feed */
+.activity-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-user {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 2px;
+}
+.activity-response {
+  font-size: 13px;
+  color: var(--gray-500);
+  margin-bottom: 2px;
+}
+.activity-time {
+  font-size: 11px;
+  color: var(--gray-400);
+}
+
+/* Decision Log */
+.decision-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+.decision-item:last-child { border-bottom: none; }
+.decision-text { font-size: 14px; font-weight: 500; color: var(--gray-700); }
+.decision-notes { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+.decision-date { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+
+/* Chat Input */
+.chat-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid var(--gray-200);
+  padding: 12px 16px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 50;
+  display: flex;
+  gap: 8px;
+}
+.chat-input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1px solid var(--gray-300);
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  background: var(--gray-50);
+  transition: border-color 0.15s;
+  min-height: 44px;
+}
+.chat-input:focus { border-color: var(--green); }
+.chat-input::placeholder { color: var(--gray-400); }
+.chat-send {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: none;
+  background: var(--green);
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.chat-send:disabled { background: var(--gray-300); cursor: not-allowed; }
+
+/* Loading */
+.loading-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.8);
+  z-index: 90;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+}
+.loading-overlay.visible { display: flex; }
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 14px; color: var(--gray-500); }
+
+/* All Tasks Done */
+.all-done {
+  text-align: center;
+  padding: 32px 20px;
+}
+.all-done-icon { font-size: 48px; margin-bottom: 12px; }
+.all-done-title { font-size: 20px; font-weight: 700; color: var(--gray-900); }
+.all-done-sub { font-size: 14px; color: var(--gray-500); margin-top: 4px; }
+
+/* Utility */
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: var(--gray-400);
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+
+<!-- AI Response Toast -->
+<div class="ai-toast" id="aiToast">
+  <div class="ai-toast-inner">
+    <button class="ai-toast-dismiss" onclick="dismissToast()">&times;</button>
+    <div class="ai-toast-response" id="aiResponse"></div>
+    <ul class="ai-toast-changes" id="aiChanges"></ul>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Updating your plan...</div>
+</div>
+
+<!-- Hero -->
+<div class="hero" id="hero"></div>
+
+<!-- Current Task -->
+<div id="currentTaskContainer"></div>
+
+<!-- Summary Stats -->
+<div class="card" id="statsCard">
+  <div class="card-header" onclick="toggleCard('stats')">
+    Summary <span class="chevron" id="statsChevron">&#9660;</span>
+  </div>
+  <div class="card-body" id="statsBody"></div>
+</div>
+
+<!-- Activity Feed -->
+<div class="card" id="activityCard">
+  <div class="card-header" onclick="toggleCard('activity')">
+    Recent Activity <span class="chevron" id="activityChevron">&#9660;</span>
+  </div>
+  <div class="card-body" id="activityBody"></div>
+</div>
+
+<!-- Full Timeline -->
+<div class="card" id="timelineCard">
+  <div class="card-header" onclick="toggleCard('timeline')">
+    Full Plan Timeline <span class="chevron" id="timelineChevron">&#9660;</span>
+  </div>
+  <div class="card-body" id="timelineBody"></div>
+</div>
+
+<!-- Decision Log -->
+<div class="card" id="decisionCard">
+  <div class="card-header collapsed" onclick="toggleCard('decision')">
+    Decision Log <span class="chevron" id="decisionChevron">&#9660;</span>
+  </div>
+  <div class="card-body collapsed" id="decisionBody"></div>
+</div>
+
+<!-- Chat Bar -->
+<div class="chat-bar">
+  <input type="text" class="chat-input" id="chatInput" placeholder="Tell me what's happening..." autocomplete="off">
+  <button class="chat-send" id="chatSend" onclick="sendMessage()">&#9654;</button>
+</div>
+
+<script>
+// =====================================================
+// CONFIG — Update this base URL after deploying the Worker
+// =====================================================
+const API_BASE = 'https://lawn-plan-api.YOUR-SUBDOMAIN.workers.dev';
+const API_URL = API_BASE + '/api/revise-plan';
+const API_PLAN_URL = API_BASE + '/api/plan';
+
+// Seed plan data — used on first visit
+const SEED_PLAN = {
+  lastUpdated: "2026-02-28",
+  activityLog: [],
+  tasks: [
+    {
+      id: "soil-samples",
+      title: "Collect & Submit Soil Samples",
+      description: "Grab two zip-lock bags and a trowel. Dig 4-6\" deep in 5-6 random spots for front and back yards separately. Mix each in a bucket, fill bag, label.",
+      targetDate: "2026-02-28",
+      deadline: "2026-03-14",
+      estimatedTime: "30 minutes",
+      status: "not-started",
+      diyOrPro: "diy",
+      materials: ["Zip-lock bags or soil sample bags", "Trowel"],
+      cost: "$0-8",
+      dependsOn: [],
+      phase: 1,
+      weekend: "This Weekend (2/28-3/1)",
+      notes: "Submit to NC State Soil Testing Lab. Results take 2-3 weeks."
+    },
+    {
+      id: "spring-cleanup",
+      title: "Spring Cleanup & Debris Removal",
+      description: "Rake leaves, pine needles, and debris from all lawn areas. Focus on backyard fence lines and under trees.",
+      targetDate: "2026-03-01",
+      deadline: "2026-03-08",
+      estimatedTime: "2-3 hours",
+      status: "not-started",
+      diyOrPro: "diy",
+      materials: ["Leaf rake", "Yard waste bags or tarp"],
+      cost: "~$10",
+      dependsOn: [],
+      phase: 1,
+      weekend: "This Weekend (2/28-3/1) → finish 3/7-8",
+      notes: "Debris blocks sunlight and slows Bermuda green-up."
+    },
+    {
+      id: "shopping-trip-1",
+      title: "Materials Shopping Trip #1",
+      description: "Buy topsoil, sand, EWF, landscape fabric, staples, and edging. One trip to Lowe's/HD. Arrange bulk EWF delivery separately if going that route.",
+      targetDate: "2026-03-04",
+      deadline: "2026-03-06",
+      estimatedTime: "1 hour",
+      status: "not-started",
+      diyOrPro: "diy",
+      materials: ["Topsoil (8-10 bags)", "Coarse sand (3 bags)", "Landscape fabric (4ftx50ft)", "Landscape staples (50-pack)", "Landscape edging/timbers (42 ln ft)", "EWF (~20 bags or bulk)"],
+      cost: "$170-315",
+      dependsOn: [],
+      phase: 1,
+      weekend: "Weekday errand — week of 3/2",
+      notes: "This front-loads materials for weekends 1 and 2."
+    },
+    {
+      id: "tree-area",
+      title: "Remove Bark Mulch & Level Tree Area",
+      description: "Rake/shovel bark mulch out of old tree circle. Fill depression with topsoil/sand mix (70/30). Level with surrounding lawn (slightly mound for settling). Tamp firmly.",
+      targetDate: "2026-03-07",
+      deadline: "2026-03-22",
+      estimatedTime: "2-3 hours",
+      status: "not-started",
+      diyOrPro: "diy",
+      materials: ["Topsoil (from shopping trip 1)", "Sand (from shopping trip 1)", "Wheelbarrow", "Shovel", "Rake", "Tamper"],
+      cost: "$40-65",
+      dependsOn: ["shopping-trip-1"],
+      phase: 2,
+      weekend: "Weekend 1 (3/7-8)",
+      notes: "Bermuda will spread into this area naturally over summer."
+    },
+    {
+      id: "ewf-playset",
+      title: "Install EWF Around Playset",
+      description: "1) Level the 9x12 ft area. 2) Install border edging. 3) Lay landscape fabric, overlap seams 6\", staple down. 4) Fill with 6\" of EWF. 5) Rake level and compact.",
+      targetDate: "2026-03-14",
+      deadline: "2026-03-29",
+      estimatedTime: "4-6 hours",
+      status: "not-started",
+      diyOrPro: "diy",
+      materials: ["EWF (~2 cu yd)", "Landscape fabric", "Landscape staples", "Edging/timbers (42 ln ft)", "Stakes", "Rubber mallet", "Utility knife"],
+      cost: "$140-250",
+      dependsOn: ["shopping-trip-1"],
+      phase: 2,
+      weekend: "Weekend 2 (3/14-15)",
+      notes: "Biggest DIY day. Pre-drill timbers to avoid splitting."
+    },
+    {
+      id: "scalp-mow",
+      title: "Scalp Mow (First Mow of Season)",
+      description: "Drop mower to lowest setting (~1-1.5\"). Mow entire lawn. Bag all clippings to remove dead thatch layer.",
+      targetDate: "2026-03-21",
+      deadline: "2026-04-12",
+      estimatedTime: "1-2 hours",
+      status: "not-started",
+      diyOrPro: "diy",
+      materials: ["Mower", "Bags for clippings"],
+      cost: "$0",
+      dependsOn: [],
+      phase: 2,
+      weekend: "Weekend 3 (3/21-22)",
+      notes: "Weather dependent — only do when Bermuda shows green. Can push to 3/28-29 or 4/4-5.",
+      constraints: ["Must coincide with Bermuda green-up", "Soil temp needs to be 65°F+"]
+    },
+    {
+      id: "shopping-trip-2",
+      title: "Materials Shopping Trip #2",
+      description: "Buy pea gravel or crushed granite and optional polymeric sand for the under-deck project.",
+      targetDate: "2026-03-30",
+      deadline: "2026-04-03",
+      estimatedTime: "1 hour",
+      status: "not-started",
+      diyOrPro: "diy",
+      materials: ["Pea gravel or crushed granite (~1 cu yd)", "Polymeric sand (optional)"],
+      cost: "$55-140",
+      dependsOn: [],
+      phase: 3,
+      weekend: "Weekday errand — week of 3/30",
+      notes: ""
+    },
+    {
+      id: "gravel-deck",
+      title: "Gravel/Hardscape Under the Deck",
+      description: "1) Clear debris, weeds, loose material. 2) Level ground, fill low spots, tamp. 3) Lay landscape fabric. 4) Fill with 2-3\" of pea gravel or crushed granite. 5) Reset shifted flagstone pavers.",
+      targetDate: "2026-04-04",
+      deadline: "2026-04-19",
+      estimatedTime: "3-5 hours",
+      status: "not-started",
+      diyOrPro: "diy",
+      materials: ["Pea gravel or crushed granite (from shopping trip 2)", "Landscape fabric (leftover)", "Polymeric sand (optional)"],
+      cost: "$60-160",
+      dependsOn: ["shopping-trip-2"],
+      phase: 3,
+      weekend: "Weekend 5 (4/4-5)",
+      notes: "This eliminates the mud problem under the deck permanently."
+    },
+    {
+      id: "call-leapfrog",
+      title: "Call Leapfrog — Quote Aeration + Sod",
+      description: "Call Leapfrog (919-427-3131). Ask for bundled quote on: core aeration (full lawn, focus on compacted backyard) + Bermuda sod installation (irrigation-damaged areas + fire pit zone). Ask about compost top dressing. Ask their opinion on which areas are too shaded for Bermuda. Share photos of bare areas.",
+      targetDate: "2026-04-06",
+      deadline: "2026-04-17",
+      estimatedTime: "15-30 minutes",
+      status: "not-started",
+      diyOrPro: "diy",
+      materials: [],
+      cost: "$0",
+      dependsOn: [],
+      phase: 3,
+      weekend: "Weekday — week of 4/6",
+      notes: "Also ask if they've done a soil test on your property. If so, you may not need the NC State results."
+    },
+    {
+      id: "leapfrog-aeration-sod",
+      title: "Leapfrog: Aeration + Sod Installation",
+      description: "Leapfrog handles core aeration of full lawn and Bermuda sod installation in bare areas. Your job: water new sod daily for 2 weeks, then taper. Keep dog off new sod for 2-3 weeks. Don't mow new sod until it passes the tug test.",
+      targetDate: "2026-05-25",
+      deadline: "2026-06-30",
+      estimatedTime: "Handled by Leapfrog",
+      status: "not-started",
+      diyOrPro: "pro",
+      materials: [],
+      cost: "$375-775+ (get quote)",
+      dependsOn: ["call-leapfrog"],
+      phase: 3,
+      weekend: "Scheduled by Leapfrog (late May - June)",
+      notes: "Bundled service. Date set by Leapfrog."
+    },
+    {
+      id: "summer-assessment",
+      title: "Mid-Summer Assessment",
+      description: "Walk the yard and compare to February photos. Check: How well have bare areas filled in? Is sod established? Are shade areas still bare? If shade areas are still struggling, decide on mondo grass/liriope ground cover or additional hardscape.",
+      targetDate: "2026-07-11",
+      deadline: "2026-07-31",
+      estimatedTime: "30 minutes",
+      status: "not-started",
+      diyOrPro: "diy",
+      materials: [],
+      cost: "$0",
+      dependsOn: ["leapfrog-aeration-sod"],
+      phase: 4,
+      weekend: "Any weekend in July",
+      notes: "This decides whether we need ground cover for shade areas."
+    }
+  ],
+  decisions: [
+    { date: "2026-02-28", decision: "Playset ground cover: EWF", notes: "9x12 ft, ~2 cu yd, landscape fabric underneath" },
+    { date: "2026-02-28", decision: "Front yard tree area: All lawn", notes: "Remove mulch, level, let Bermuda fill in" },
+    { date: "2026-02-28", decision: "Bare area fix: Hybrid approach", notes: "Leapfrog sod for priority areas; natural fill-in for rest; reassess July" },
+    { date: "2026-02-28", decision: "Shade zone: Ground cover + hardscape hybrid", notes: "Deferred to July assessment" },
+    { date: "2026-02-28", decision: "Fertilizer: Leapfrog handles it", notes: "Included in Better Grass Warm plan" }
+  ],
+  context: {
+    location: "Fuquay-Varina, NC",
+    grassType: "Bermuda (warm-season)",
+    leapfrogPlan: "Better Grass Warm — 7 annual treatments (pre/post emergent, fertilizer, compost tea, lime)",
+    leapfrogPhone: "919-427-3131",
+    lastTreatment: "2026-01-20 — Pre & Post Emergent Weed Control",
+    nextTreatment: "Late March / early April — pre-emergent + fertilizer + compost tea",
+    constraints: [
+      "Bermuda greens up when soil temp hits 65°F consistently (late March / early April in Fuquay-Varina)",
+      "Pre-emergent kills seed — cannot seed while active (lasts ~3-4 months)",
+      "Sod and plugs are NOT affected by pre-emergent",
+      "Bermuda needs 6+ hours direct sun",
+      "Max one major project (3+ hours) per weekend",
+      "Evan does bulk work on Sat/Sun only; weekday errands and planning are fine"
+    ]
+  }
+};
+
+// =====================================================
+// STATE
+// =====================================================
+let plan = null;
+let isLoading = false;
+const collapsedSections = { stats: false, activity: false, timeline: false, decision: true };
+
+// =====================================================
+// INIT
+// =====================================================
+async function init() {
+  // Show loading while we fetch plan from the server
+  document.getElementById('loadingOverlay').classList.add('visible');
+  document.querySelector('.loading-text').textContent = 'Loading your plan...';
+
+  try {
+    const res = await fetch(API_PLAN_URL);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.plan) {
+        plan = data.plan;
+      }
+    }
+  } catch (err) {
+    console.warn('Could not load plan from server, checking localStorage fallback:', err);
+    // Fallback to localStorage if Worker is unreachable (e.g. local dev)
+    const stored = localStorage.getItem('lawnPlan');
+    if (stored) {
+      try { plan = JSON.parse(stored); } catch (e) { plan = null; }
+    }
+  }
+
+  // If no plan exists anywhere, seed it
+  if (!plan) {
+    plan = JSON.parse(JSON.stringify(SEED_PLAN));
+    await savePlan();
+  }
+
+  document.getElementById('loadingOverlay').classList.remove('visible');
+  render();
+
+  // Enter key sends message
+  document.getElementById('chatInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+}
+
+async function savePlan() {
+  // Persist to KV via the Worker
+  try {
+    await fetch(API_PLAN_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan }),
+    });
+  } catch (err) {
+    console.warn('Could not save plan to server:', err);
+  }
+}
+
+function getToday() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr) return 999;
+  const target = new Date(dateStr + 'T12:00:00');
+  const today = new Date(getToday() + 'T12:00:00');
+  return Math.round((target - today) / (1000 * 60 * 60 * 24));
+}
+
+function getNextTask() {
+  return plan.tasks.find(t => t.status === 'not-started' || t.status === 'in-progress');
+}
+
+function getStatusIcon(status) {
+  switch (status) {
+    case 'done': return '\u2705';
+    case 'skipped': return '\u23ED\uFE0F';
+    case 'in-progress': return '\uD83D\uDD04';
+    default: return '\u2B1C';
+  }
+}
+
+// =====================================================
+// RENDER
+// =====================================================
+function render() {
+  renderHero();
+  renderCurrentTask();
+  renderStats();
+  renderActivity();
+  renderTimeline();
+  renderDecisions();
+}
+
+function renderHero() {
+  const hero = document.getElementById('hero');
+  const next = getNextTask();
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+  if (!next) {
+    hero.innerHTML = `
+      <div class="hero-date">${today}</div>
+      <div class="hero-next">All caught up!</div>
+      <span class="hero-sub on-track">No pending tasks</span>
+    `;
+    return;
+  }
+
+  const days = daysUntil(next.targetDate);
+  let statusClass, statusText;
+  if (days < 0) {
+    statusClass = 'overdue';
+    statusText = `Target: ${formatDate(next.targetDate)} — overdue by ${Math.abs(days)} day${Math.abs(days) !== 1 ? 's' : ''}`;
+  } else if (days <= 3) {
+    statusClass = 'due-soon';
+    statusText = `Target: ${formatDate(next.targetDate)} — ${days === 0 ? 'today' : days === 1 ? 'tomorrow' : days + ' days away'}`;
+  } else {
+    statusClass = 'on-track';
+    statusText = `Target: ${formatDate(next.targetDate)} — ${days} days away`;
+  }
+
+  hero.innerHTML = `
+    <div class="hero-date">${today}</div>
+    <div class="hero-next">Next up: ${next.title}</div>
+    <span class="hero-sub ${statusClass}">${statusText}</span>
+  `;
+}
+
+function renderCurrentTask() {
+  const container = document.getElementById('currentTaskContainer');
+  const next = getNextTask();
+
+  if (!next) {
+    container.innerHTML = `
+      <div class="card">
+        <div class="all-done">
+          <div class="all-done-icon">\uD83C\uDF89</div>
+          <div class="all-done-title">All tasks complete!</div>
+          <div class="all-done-sub">Use the chat to add new tasks or ask questions.</div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const days = daysUntil(next.targetDate);
+  let urgencyClass = '';
+  if (days < 0) urgencyClass = 'overdue';
+  else if (days <= 3) urgencyClass = 'due-soon';
+
+  const materialsHtml = next.materials && next.materials.length > 0
+    ? `<div class="task-materials">
+        <strong>Materials:</strong>
+        <ul>${next.materials.map(m => `<li>${m}</li>`).join('')}</ul>
+      </div>`
+    : '';
+
+  container.innerHTML = `
+    <div class="card current-task ${urgencyClass}">
+      <div class="card-body">
+        <div class="task-title">${next.title}</div>
+        <div class="task-meta">
+          <span>${next.estimatedTime}</span>
+          <span>${next.cost !== '$0' ? next.cost : 'Free'}</span>
+          <span>${next.diyOrPro === 'pro' ? 'Pro' : 'DIY'}</span>
+        </div>
+        <div class="task-desc">${next.description}</div>
+        ${materialsHtml}
+        ${next.notes ? `<div class="task-desc" style="font-size:13px;color:var(--gray-500);margin-bottom:16px">${next.notes}</div>` : ''}
+        <div class="task-actions">
+          <button class="btn btn-done" onclick="quickAction('done')">Done</button>
+          <button class="btn btn-skip" onclick="quickAction('skip')">Couldn't Do It</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderStats() {
+  const body = document.getElementById('statsBody');
+  if (collapsedSections.stats) {
+    body.classList.add('collapsed');
+    document.getElementById('statsChevron').parentElement.classList.add('collapsed');
+  } else {
+    body.classList.remove('collapsed');
+    document.getElementById('statsChevron').parentElement.classList.remove('collapsed');
+  }
+
+  const done = plan.tasks.filter(t => t.status === 'done').length;
+  const total = plan.tasks.length;
+
+  // Budget calculation
+  let budgetLow = 0, budgetHigh = 0;
+  plan.tasks.forEach(t => {
+    if (t.status === 'done' || t.status === 'skipped') return;
+    const costStr = (t.cost || '$0').replace(/[^0-9.\-+~]/g, ' ').trim();
+    const nums = costStr.match(/[\d.]+/g);
+    if (nums) {
+      budgetLow += parseFloat(nums[0]) || 0;
+      budgetHigh += parseFloat(nums[nums.length - 1]) || 0;
+    }
+  });
+
+  // Next Leapfrog
+  const leapfrogTask = plan.tasks.find(t => t.id === 'call-leapfrog' && t.status !== 'done');
+  const leapfrogText = leapfrogTask ? `${leapfrogTask.title} (${formatDate(leapfrogTask.targetDate)})` : 'All Leapfrog tasks done';
+
+  body.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-value">${done} / ${total}</div>
+        <div class="stat-label">Tasks Done</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">$${Math.round(budgetLow)}-${Math.round(budgetHigh)}</div>
+        <div class="stat-label">Remaining Budget</div>
+      </div>
+      <div class="stat-item full-width">
+        <div class="stat-label">Next Leapfrog Touchpoint</div>
+        <div style="font-size:14px;font-weight:500;color:var(--gray-700);margin-top:4px">${leapfrogText}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderActivity() {
+  const body = document.getElementById('activityBody');
+  if (collapsedSections.activity) {
+    body.classList.add('collapsed');
+    document.getElementById('activityChevron').parentElement.classList.add('collapsed');
+  } else {
+    body.classList.remove('collapsed');
+    document.getElementById('activityChevron').parentElement.classList.remove('collapsed');
+  }
+
+  const log = (plan.activityLog || []).slice(-10).reverse();
+  if (log.length === 0) {
+    body.innerHTML = '<div class="empty-state">No activity yet. Use the chat below to get started!</div>';
+    return;
+  }
+
+  body.innerHTML = log.map(entry => `
+    <div class="activity-item">
+      <div class="activity-user">${entry.userMessage}</div>
+      <div class="activity-response">${entry.response}</div>
+      <div class="activity-time">${entry.timestamp ? new Date(entry.timestamp).toLocaleString() : ''}</div>
+    </div>
+  `).join('');
+}
+
+function renderTimeline() {
+  const body = document.getElementById('timelineBody');
+  if (collapsedSections.timeline) {
+    body.classList.add('collapsed');
+    document.getElementById('timelineChevron').parentElement.classList.add('collapsed');
+  } else {
+    body.classList.remove('collapsed');
+    document.getElementById('timelineChevron').parentElement.classList.remove('collapsed');
+  }
+
+  // Group by weekend field
+  const groups = {};
+  plan.tasks.forEach(t => {
+    const key = t.weekend || 'Unscheduled';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(t);
+  });
+
+  let html = '';
+  Object.entries(groups).forEach(([weekend, tasks]) => {
+    html += `<div class="timeline-group-title">${weekend}</div>`;
+    tasks.forEach(t => {
+      const doneClass = t.status === 'done' ? 'done' : '';
+      html += `
+        <div class="timeline-task ${doneClass}" onclick="toggleTimelineTask(this)">
+          <div class="timeline-task-header">
+            <span class="timeline-task-status">${getStatusIcon(t.status)}</span>
+            <span class="timeline-task-name">${t.title}</span>
+            <span class="timeline-task-date">${formatDate(t.targetDate)}</span>
+          </div>
+          <div class="timeline-task-details">
+            <p>${t.description}</p>
+            ${t.notes ? `<p style="margin-top:6px;color:var(--gray-500)">${t.notes}</p>` : ''}
+            ${t.materials && t.materials.length ? `<p style="margin-top:6px"><strong>Materials:</strong> ${t.materials.join(', ')}</p>` : ''}
+            <p style="margin-top:6px;color:var(--gray-400)">Est: ${t.estimatedTime} · Cost: ${t.cost} · ${t.diyOrPro === 'pro' ? 'Pro' : 'DIY'}</p>
+          </div>
+        </div>
+      `;
+    });
+  });
+
+  body.innerHTML = html;
+}
+
+function renderDecisions() {
+  const body = document.getElementById('decisionBody');
+  if (collapsedSections.decision) {
+    body.classList.add('collapsed');
+    document.getElementById('decisionChevron').parentElement.classList.add('collapsed');
+  } else {
+    body.classList.remove('collapsed');
+    document.getElementById('decisionChevron').parentElement.classList.remove('collapsed');
+  }
+
+  body.innerHTML = (plan.decisions || []).map(d => `
+    <div class="decision-item">
+      <div class="decision-text">${d.decision}</div>
+      ${d.notes ? `<div class="decision-notes">${d.notes}</div>` : ''}
+      <div class="decision-date">${formatDate(d.date)}</div>
+    </div>
+  `).join('');
+}
+
+// =====================================================
+// INTERACTIONS
+// =====================================================
+function toggleCard(name) {
+  collapsedSections[name] = !collapsedSections[name];
+  render();
+}
+
+function toggleTimelineTask(el) {
+  el.classList.toggle('expanded');
+}
+
+function quickAction(type) {
+  const next = getNextTask();
+  if (!next) return;
+  const input = document.getElementById('chatInput');
+  if (type === 'done') {
+    input.value = `Finished "${next.title}"`;
+  } else {
+    input.value = `Couldn't do "${next.title}" — `;
+    input.focus();
+    return; // Let user type a reason
+  }
+  sendMessage();
+}
+
+function dismissToast() {
+  document.getElementById('aiToast').classList.remove('visible');
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const message = input.value.trim();
+  if (!message || isLoading) return;
+
+  input.value = '';
+  isLoading = true;
+  document.getElementById('loadingOverlay').classList.add('visible');
+  document.getElementById('chatSend').disabled = true;
+  dismissToast();
+
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message,
+        currentPlan: plan,
+        activityLog: (plan.activityLog || []).slice(-10),
+        today: getToday(),
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `API error (${response.status})`);
+    }
+
+    const data = await response.json();
+
+    // Update plan with revised version
+    if (data.revisedPlan) {
+      // Add this interaction to the activity log
+      const logEntry = {
+        timestamp: new Date().toISOString(),
+        userMessage: message,
+        response: data.response || '',
+        changes: data.changes || [],
+      };
+      data.revisedPlan.activityLog = data.revisedPlan.activityLog || [];
+      data.revisedPlan.activityLog.push(logEntry);
+      data.revisedPlan.lastUpdated = getToday();
+      plan = data.revisedPlan;
+      // The Worker already saved the revised plan to KV, but we need to
+      // persist the activity log entry the client just appended
+      await savePlan();
+    }
+
+    // Show response toast
+    document.getElementById('aiResponse').textContent = data.response || 'Plan updated.';
+    const changesEl = document.getElementById('aiChanges');
+    changesEl.innerHTML = (data.changes || []).map(c => `<li>${c}</li>`).join('');
+    document.getElementById('aiToast').classList.add('visible');
+
+    render();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  } finally {
+    isLoading = false;
+    document.getElementById('loadingOverlay').classList.remove('visible');
+    document.getElementById('chatSend').disabled = false;
+  }
+}
+
+// Boot
+init();
+</script>
+</body>
+</html>

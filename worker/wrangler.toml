@@ -1,0 +1,13 @@
+name = "lawn-plan-api"
+main = "src/index.js"
+compatibility_date = "2026-02-28"
+
+# Evan: update this route to match your domain after initial setup
+# routes = [{ pattern = "yourdomain.com/api/*", zone_name = "yourdomain.com" }]
+
+# KV namespace for shared plan state
+# After first deploy, run: wrangler kv namespace create LAWN_PLAN
+# Then paste the generated id below and redeploy.
+[[kv_namespaces]]
+binding = "LAWN_PLAN"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
