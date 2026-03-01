@@ -10,4 +10,4 @@ compatibility_date = "2026-02-28"
 # Then paste the generated id below and redeploy.
 [[kv_namespaces]]
 binding = "LAWN_PLAN"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "4e40995304804c69b1547513f83f3301"
