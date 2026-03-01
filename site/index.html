@@ -510,6 +510,7 @@ const API_URL = API_BASE + '/api/revise-plan';
 const API_PLAN_URL = API_BASE + '/api/plan';
 const API_VERSIONS_URL = API_BASE + '/api/versions';
 const API_ROLLBACK_URL = API_BASE + '/api/rollback';
+const APP_TOKEN = 'lp-2026-fv-bermuda-xK9mP3'; // shared secret — must match Worker's APP_TOKEN
 
 // Seed plan data — used on first visit
 const SEED_PLAN = {
@@ -737,7 +738,7 @@ async function init() {
   document.querySelector('.loading-text').textContent = 'Loading your plan...';
 
   try {
-    const res = await fetch(API_PLAN_URL);
+    const res = await fetch(API_PLAN_URL, { headers: { 'X-App-Token': APP_TOKEN } });
     if (res.ok) {
       const data = await res.json();
       if (data.plan) {
@@ -777,7 +778,7 @@ async function savePlan() {
   try {
     await fetch(API_PLAN_URL, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-App-Token': APP_TOKEN },
       body: JSON.stringify({ plan }),
     });
   } catch (err) {
@@ -1091,7 +1092,7 @@ async function sendMessage() {
   try {
     const response = await fetch(API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-App-Token': APP_TOKEN },
       body: JSON.stringify({
         message,
         currentPlan: plan,
@@ -1155,7 +1156,7 @@ async function sendMessage() {
 // =====================================================
 async function fetchVersions() {
   try {
-    const res = await fetch(API_VERSIONS_URL);
+    const res = await fetch(API_VERSIONS_URL, { headers: { 'X-App-Token': APP_TOKEN } });
     if (res.ok) {
       const data = await res.json();
       versionList = data.versions || [];
@@ -1224,7 +1225,7 @@ async function restoreVersion(timestamp) {
   try {
     const res = await fetch(API_ROLLBACK_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-App-Token': APP_TOKEN },
       body: JSON.stringify({ timestamp }),
     });
 

@@ -56,6 +56,15 @@ export default {
     const path = url.pathname.replace(/\/$/, '');
     const headers = { ...corsHeaders(request), 'Content-Type': 'application/json' };
 
+    // --- Auth: require shared secret on all non-OPTIONS requests ---
+    const token = request.headers.get('X-App-Token');
+    if (token !== env.APP_TOKEN) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers }
+      );
+    }
+
     // --- GET /api/plan — read current plan from KV ---
     if (request.method === 'GET' && path.endsWith('/api/plan')) {
       try {
@@ -112,19 +121,20 @@ export default {
 };
 
 async function handleRevisePlan(request, env, headers) {
-  // Rate limiting (simple daily counter using global state)
+  // Rate limiting — persisted in KV so it survives Worker restarts
   const today = new Date().toISOString().slice(0, 10);
   const rateLimitKey = `rate-limit:${today}`;
 
-  if (!globalThis._rateLimits) globalThis._rateLimits = {};
-  const count = globalThis._rateLimits[rateLimitKey] || 0;
+  const countRaw = await env.LAWN_PLAN.get(rateLimitKey);
+  const count = countRaw ? parseInt(countRaw, 10) : 0;
   if (count >= DAILY_RATE_LIMIT) {
     return new Response(
       JSON.stringify({ error: 'Daily rate limit reached. Try again tomorrow.' }),
       { status: 429, headers }
     );
   }
-  globalThis._rateLimits[rateLimitKey] = count + 1;
+  // Increment and set TTL of 48h so old keys auto-expire
+  await env.LAWN_PLAN.put(rateLimitKey, String(count + 1), { expirationTtl: 172800 });
 
   try {
     const body = await request.json();
@@ -315,7 +325,7 @@ function corsHeaders(request) {
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, PUT, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, X-App-Token',
     'Access-Control-Max-Age': '86400',
   };
 }
