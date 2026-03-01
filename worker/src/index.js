@@ -42,6 +42,8 @@ RESPONSE FORMAT — Respond with ONLY a valid JSON object:
 Do not include any text outside the JSON object. Do not wrap in markdown code fences.`;
 
 const KV_KEY = 'current-plan';
+const VERSION_META_KEY = 'version-meta';
+const MAX_VERSIONS = 10;
 
 export default {
   async fetch(request, env) {
@@ -86,6 +88,23 @@ export default {
     // --- POST /api/revise-plan — AI revision ---
     if (request.method === 'POST' && path.endsWith('/api/revise-plan')) {
       return handleRevisePlan(request, env, headers);
+    }
+
+    // --- GET /api/versions — list version history ---
+    if (request.method === 'GET' && path.endsWith('/api/versions')) {
+      try {
+        const metaRaw = await env.LAWN_PLAN.get(VERSION_META_KEY);
+        const meta = metaRaw ? JSON.parse(metaRaw) : [];
+        return new Response(JSON.stringify({ versions: meta }), { headers });
+      } catch (err) {
+        console.error('Version meta read error:', err);
+        return new Response(JSON.stringify({ error: 'Failed to read versions' }), { status: 500, headers });
+      }
+    }
+
+    // --- POST /api/rollback — restore a previous version ---
+    if (request.method === 'POST' && path.endsWith('/api/rollback')) {
+      return handleRollback(request, env, headers);
     }
 
     return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers });
@@ -178,8 +197,20 @@ Revise the plan as needed and respond.`;
       );
     }
 
-    // Persist the revised plan to KV so both devices stay in sync
+    // Save a version snapshot of the pre-revision plan, then persist the revised plan
     if (parsed.revisedPlan) {
+      try {
+        // Snapshot the plan as it was BEFORE the AI changed it (so undo restores this)
+        await saveVersion(env, currentPlan, {
+          userMessage: message,
+          changes: parsed.changes || [],
+          source: 'ai-revision',
+        });
+      } catch (vErr) {
+        console.error('Version snapshot failed:', vErr);
+        // Non-fatal
+      }
+
       try {
         await env.LAWN_PLAN.put(KV_KEY, JSON.stringify(parsed.revisedPlan));
       } catch (kvErr) {
@@ -193,6 +224,87 @@ Revise the plan as needed and respond.`;
     console.error('Worker error:', err);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
+      { status: 500, headers }
+    );
+  }
+}
+
+// --- Version history helpers ---
+
+async function saveVersion(env, plan, meta) {
+  const timestamp = Date.now();
+  const versionKey = `version::${timestamp}`;
+
+  // Write the snapshot
+  await env.LAWN_PLAN.put(versionKey, JSON.stringify({ plan, ...meta }));
+
+  // Update the index
+  const metaRaw = await env.LAWN_PLAN.get(VERSION_META_KEY);
+  const metaList = metaRaw ? JSON.parse(metaRaw) : [];
+
+  metaList.push({
+    timestamp,
+    userMessage: (meta.userMessage || '').slice(0, 100),
+    changeCount: (meta.changes || []).length,
+    source: meta.source || 'unknown',
+  });
+
+  // Prune to MAX_VERSIONS — delete evicted snapshots
+  while (metaList.length > MAX_VERSIONS) {
+    const evicted = metaList.shift();
+    try {
+      await env.LAWN_PLAN.delete(`version::${evicted.timestamp}`);
+    } catch (_) { /* best-effort cleanup */ }
+  }
+
+  await env.LAWN_PLAN.put(VERSION_META_KEY, JSON.stringify(metaList));
+}
+
+async function handleRollback(request, env, headers) {
+  try {
+    const body = await request.json();
+    const { timestamp } = body;
+
+    if (!timestamp) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required field: timestamp' }),
+        { status: 400, headers }
+      );
+    }
+
+    // Read the version snapshot to restore
+    const versionRaw = await env.LAWN_PLAN.get(`version::${timestamp}`);
+    if (!versionRaw) {
+      return new Response(
+        JSON.stringify({ error: 'Version not found' }),
+        { status: 404, headers }
+      );
+    }
+
+    const versionData = JSON.parse(versionRaw);
+
+    // Save the current plan as a new version before overwriting (so rollback is undoable)
+    const currentRaw = await env.LAWN_PLAN.get(KV_KEY);
+    if (currentRaw) {
+      try {
+        await saveVersion(env, JSON.parse(currentRaw), {
+          userMessage: 'Rollback performed',
+          changes: ['Rolled back to earlier version'],
+          source: 'rollback',
+        });
+      } catch (vErr) {
+        console.error('Pre-rollback snapshot failed:', vErr);
+      }
+    }
+
+    // Write the restored plan
+    await env.LAWN_PLAN.put(KV_KEY, JSON.stringify(versionData.plan));
+
+    return new Response(JSON.stringify({ ok: true, plan: versionData.plan }), { headers });
+  } catch (err) {
+    console.error('Rollback error:', err);
+    return new Response(
+      JSON.stringify({ error: 'Rollback failed' }),
       { status: 500, headers }
     );
   }

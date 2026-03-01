@@ -295,6 +295,7 @@ body {
   padding-bottom: max(12px, env(safe-area-inset-bottom));
   z-index: 50;
   display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 .chat-input {
@@ -360,6 +361,63 @@ body {
 .all-done-title { font-size: 20px; font-weight: 700; color: var(--gray-900); }
 .all-done-sub { font-size: 14px; color: var(--gray-500); margin-top: 4px; }
 
+/* Version History */
+.version-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.version-item:last-child { border-bottom: none; }
+.version-info { flex: 1; min-width: 0; }
+.version-message {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-700);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.version-meta {
+  font-size: 11px;
+  color: var(--gray-400);
+  margin-top: 2px;
+}
+.version-restore {
+  padding: 6px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  background: white;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-600);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.version-restore:active { background: var(--gray-100); }
+
+/* Quick Undo */
+.undo-bar {
+  display: none;
+}
+.undo-bar.visible { display: block; }
+.undo-btn {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--amber);
+  border-radius: 8px;
+  background: var(--amber-light);
+  color: #92400e;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.undo-btn:active { opacity: 0.8; }
+
 /* Utility */
 .empty-state {
   text-align: center;
@@ -408,6 +466,14 @@ body {
   <div class="card-body" id="activityBody"></div>
 </div>
 
+<!-- Version History -->
+<div class="card" id="versionCard">
+  <div class="card-header collapsed" onclick="toggleCard('versions')">
+    Version History <span class="chevron" id="versionsChevron">&#9660;</span>
+  </div>
+  <div class="card-body collapsed" id="versionsBody"></div>
+</div>
+
 <!-- Full Timeline -->
 <div class="card" id="timelineCard">
   <div class="card-header" onclick="toggleCard('timeline')">
@@ -426,8 +492,13 @@ body {
 
 <!-- Chat Bar -->
 <div class="chat-bar">
-  <input type="text" class="chat-input" id="chatInput" placeholder="Tell me what's happening..." autocomplete="off">
-  <button class="chat-send" id="chatSend" onclick="sendMessage()">&#9654;</button>
+  <div class="undo-bar" id="undoBar">
+    <button class="undo-btn" onclick="quickUndo()">&#8635; Undo last change</button>
+  </div>
+  <div style="display:flex;gap:8px;flex:1">
+    <input type="text" class="chat-input" id="chatInput" placeholder="Tell me what's happening..." autocomplete="off">
+    <button class="chat-send" id="chatSend" onclick="sendMessage()">&#9654;</button>
+  </div>
 </div>
 
 <script>
@@ -437,6 +508,8 @@ body {
 const API_BASE = 'https://lawn-plan-api.evan-56b.workers.dev';
 const API_URL = API_BASE + '/api/revise-plan';
 const API_PLAN_URL = API_BASE + '/api/plan';
+const API_VERSIONS_URL = API_BASE + '/api/versions';
+const API_ROLLBACK_URL = API_BASE + '/api/rollback';
 
 // Seed plan data — used on first visit
 const SEED_PLAN = {
@@ -651,7 +724,9 @@ const SEED_PLAN = {
 // =====================================================
 let plan = null;
 let isLoading = false;
-const collapsedSections = { stats: false, activity: false, timeline: false, decision: true };
+let versionList = [];
+let lastUndoTimestamp = null; // tracks the most recent pre-revision version for quick undo
+const collapsedSections = { stats: false, activity: false, timeline: false, decision: true, versions: true };
 
 // =====================================================
 // INIT
@@ -686,6 +761,7 @@ async function init() {
 
   document.getElementById('loadingOverlay').classList.remove('visible');
   render();
+  fetchVersions(); // load version history in background
 
   // Enter key sends message
   document.getElementById('chatInput').addEventListener('keydown', (e) => {
@@ -747,6 +823,7 @@ function render() {
   renderCurrentTask();
   renderStats();
   renderActivity();
+  renderVersionHistory();
   renderTimeline();
   renderDecisions();
 }
@@ -1056,6 +1133,13 @@ async function sendMessage() {
     changesEl.innerHTML = (data.changes || []).map(c => `<li>${c}</li>`).join('');
     document.getElementById('aiToast').classList.add('visible');
 
+    // Refresh version list and show quick undo button
+    await fetchVersions();
+    if (versionList.length > 0) {
+      lastUndoTimestamp = versionList[versionList.length - 1].timestamp;
+      document.getElementById('undoBar').classList.add('visible');
+    }
+
     render();
   } catch (err) {
     alert('Error: ' + err.message);
@@ -1064,6 +1148,121 @@ async function sendMessage() {
     document.getElementById('loadingOverlay').classList.remove('visible');
     document.getElementById('chatSend').disabled = false;
   }
+}
+
+// =====================================================
+// VERSION HISTORY
+// =====================================================
+async function fetchVersions() {
+  try {
+    const res = await fetch(API_VERSIONS_URL);
+    if (res.ok) {
+      const data = await res.json();
+      versionList = data.versions || [];
+      renderVersionHistory();
+    }
+  } catch (err) {
+    console.warn('Could not fetch versions:', err);
+  }
+}
+
+function renderVersionHistory() {
+  const body = document.getElementById('versionsBody');
+  if (collapsedSections.versions) {
+    body.classList.add('collapsed');
+    document.getElementById('versionsChevron').parentElement.classList.add('collapsed');
+  } else {
+    body.classList.remove('collapsed');
+    document.getElementById('versionsChevron').parentElement.classList.remove('collapsed');
+  }
+
+  if (versionList.length === 0) {
+    body.innerHTML = '<div class="empty-state">No version history yet. Changes will appear here after your first chat interaction.</div>';
+    return;
+  }
+
+  body.innerHTML = versionList.slice().reverse().map(v => {
+    const ago = timeAgo(v.timestamp);
+    const changes = v.changeCount === 1 ? '1 change' : `${v.changeCount} changes`;
+    const source = v.source === 'rollback' ? ' (rollback)' : '';
+    return `
+      <div class="version-item">
+        <div class="version-info">
+          <div class="version-message">${escapeHtml(v.userMessage || 'No message')}</div>
+          <div class="version-meta">${ago} · ${changes}${source}</div>
+        </div>
+        <button class="version-restore" onclick="restoreVersion(${v.timestamp})">Restore</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function restoreVersion(timestamp) {
+  if (!confirm('Restore plan from this snapshot? Your current plan will be saved as a version first.')) return;
+
+  isLoading = true;
+  document.getElementById('loadingOverlay').classList.add('visible');
+  document.querySelector('.loading-text').textContent = 'Restoring plan...';
+
+  try {
+    const res = await fetch(API_ROLLBACK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ timestamp }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Rollback failed (${res.status})`);
+    }
+
+    const data = await res.json();
+    if (data.plan) {
+      // Preserve local activity log on restore
+      data.plan.activityLog = plan.activityLog || [];
+      plan = data.plan;
+      await savePlan();
+    }
+
+    // Hide undo bar since we just did a restore
+    lastUndoTimestamp = null;
+    document.getElementById('undoBar').classList.remove('visible');
+
+    render();
+    await fetchVersions(); // refresh the version list
+
+    // Show success toast
+    document.getElementById('aiResponse').textContent = 'Plan restored successfully.';
+    document.getElementById('aiChanges').innerHTML = '';
+    document.getElementById('aiToast').classList.add('visible');
+  } catch (err) {
+    alert('Restore failed: ' + err.message);
+  } finally {
+    isLoading = false;
+    document.getElementById('loadingOverlay').classList.remove('visible');
+  }
+}
+
+async function quickUndo() {
+  if (!lastUndoTimestamp) return;
+  await restoreVersion(lastUndoTimestamp);
 }
 
 // Boot
