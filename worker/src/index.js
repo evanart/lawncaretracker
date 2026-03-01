@@ -30,6 +30,7 @@ PLAN MODIFICATION RULES:
 - Leapfrog-managed tasks: don't reschedule unless the user says Leapfrog changed the date.
 - Scalp mow constraint: can only happen late March through mid April when Bermuda is greening.
 - Always recalculate summary stats (budget, completion count) when the plan changes.
+- NEVER modify the activityLog array. Return it exactly as received. The client handles activity logging separately.
 
 RESPONSE FORMAT — Respond with ONLY a valid JSON object:
 {

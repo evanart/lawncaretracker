@@ -892,7 +892,7 @@ function renderActivity() {
     document.getElementById('activityChevron').parentElement.classList.remove('collapsed');
   }
 
-  const log = (plan.activityLog || []).slice(-10).reverse();
+  const log = (plan.activityLog || []).filter(e => e && e.userMessage).slice(-10).reverse();
   if (log.length === 0) {
     body.innerHTML = '<div class="empty-state">No activity yet. Use the chat below to get started!</div>';
     return;
@@ -1032,15 +1032,17 @@ async function sendMessage() {
 
     // Update plan with revised version
     if (data.revisedPlan) {
-      // Add this interaction to the activity log
+      // Use our local activity log as the source of truth (Claude is told not to
+      // modify it, but we overwrite just in case to prevent duplicates)
+      const currentLog = (plan.activityLog || []).slice();
       const logEntry = {
         timestamp: new Date().toISOString(),
         userMessage: message,
         response: data.response || '',
         changes: data.changes || [],
       };
-      data.revisedPlan.activityLog = data.revisedPlan.activityLog || [];
-      data.revisedPlan.activityLog.push(logEntry);
+      currentLog.push(logEntry);
+      data.revisedPlan.activityLog = currentLog;
       data.revisedPlan.lastUpdated = getToday();
       plan = data.revisedPlan;
       // The Worker already saved the revised plan to KV, but we need to
