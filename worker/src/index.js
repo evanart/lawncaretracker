@@ -41,6 +41,28 @@ RESPONSE FORMAT — Respond with ONLY a valid JSON object:
 
 Do not include any text outside the JSON object. Do not wrap in markdown code fences.`;
 
+const TASK_CHAT_SYSTEM_PROMPT = `You are a lawn care task assistant helping a homeowner in Fuquay-Varina, NC (Bermuda grass) refine a specific task. You receive the task data, plan context, and a conversation history.
+
+Your job is to:
+1. Answer questions about the task
+2. Help refine and expand the task description with actionable, step-by-step detail
+3. Suggest improvements, materials, or techniques when relevant
+
+RESPONSE FORMAT — Respond with ONLY a valid JSON object:
+{
+  "updatedTask": { /* the full task object with any changes */ },
+  "response": "A helpful, conversational response. Be specific and practical.",
+  "descriptionChanged": true/false
+}
+
+RULES:
+- You may update: description, notes, materials, estimatedTime, cost
+- You must NOT change: id, title, targetDate, deadline, status, dependsOn, phase, weekend, diyOrPro
+- If the user is just asking a question, set descriptionChanged to false and return the task unchanged
+- Keep descriptions actionable and step-by-step
+- Reference Bermuda grass and Fuquay-Varina, NC climate when relevant
+- Do not include any text outside the JSON object. Do not wrap in markdown code fences.`;
+
 const KV_KEY = 'current-plan';
 const VERSION_META_KEY = 'version-meta';
 const MAX_VERSIONS = 10;
@@ -97,6 +119,11 @@ export default {
     // --- POST /api/revise-plan — AI revision ---
     if (request.method === 'POST' && path.endsWith('/api/revise-plan')) {
       return handleRevisePlan(request, env, headers);
+    }
+
+    // --- POST /api/task-chat — per-task AI chat ---
+    if (request.method === 'POST' && path.endsWith('/api/task-chat')) {
+      return handleTaskChat(request, env, headers);
     }
 
     // --- GET /api/versions — list version history ---
@@ -232,6 +259,106 @@ Revise the plan as needed and respond.`;
     return new Response(JSON.stringify(parsed), { headers });
   } catch (err) {
     console.error('Worker error:', err);
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }),
+      { status: 500, headers }
+    );
+  }
+}
+
+async function handleTaskChat(request, env, headers) {
+  // Shared rate limiting with revise-plan
+  const today = new Date().toISOString().slice(0, 10);
+  const rateLimitKey = `rate-limit:${today}`;
+
+  const countRaw = await env.LAWN_PLAN.get(rateLimitKey);
+  const count = countRaw ? parseInt(countRaw, 10) : 0;
+  if (count >= DAILY_RATE_LIMIT) {
+    return new Response(
+      JSON.stringify({ error: 'Daily rate limit reached. Try again tomorrow.' }),
+      { status: 429, headers }
+    );
+  }
+  await env.LAWN_PLAN.put(rateLimitKey, String(count + 1), { expirationTtl: 172800 });
+
+  try {
+    const body = await request.json();
+    const { task, message, chatHistory, planContext } = body;
+
+    if (!task || !message) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields: task, message' }),
+        { status: 400, headers }
+      );
+    }
+
+    // Build multi-turn messages array
+    const messages = [];
+
+    // Add prior conversation turns (capped at last 10)
+    const recentHistory = (chatHistory || []).slice(-10);
+    for (const entry of recentHistory) {
+      messages.push({ role: entry.role, content: entry.content });
+    }
+
+    // Final user message includes task data + context
+    messages.push({
+      role: 'user',
+      content: `Task data:\n${JSON.stringify(task)}\n\nPlan context:\n${JSON.stringify(planContext || {})}\n\nUser message: "${message}"`,
+    });
+
+    // Call Anthropic API
+    const anthropicResponse = await fetch(ANTHROPIC_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: MAX_TOKENS,
+        system: TASK_CHAT_SYSTEM_PROMPT,
+        messages,
+      }),
+    });
+
+    if (!anthropicResponse.ok) {
+      const errorText = await anthropicResponse.text();
+      console.error('Anthropic API error:', anthropicResponse.status, errorText);
+      return new Response(
+        JSON.stringify({ error: 'AI service error', details: anthropicResponse.status }),
+        { status: 502, headers }
+      );
+    }
+
+    const anthropicData = await anthropicResponse.json();
+    const rawContent = anthropicData.content?.[0]?.text;
+
+    if (!rawContent) {
+      return new Response(
+        JSON.stringify({ error: 'Empty response from AI' }),
+        { status: 502, headers }
+      );
+    }
+
+    // Parse JSON response — strip markdown fences if present
+    let parsed;
+    try {
+      const cleaned = rawContent.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+      parsed = JSON.parse(cleaned);
+    } catch (parseError) {
+      console.error('Failed to parse task-chat response:', rawContent.slice(0, 500));
+      return new Response(
+        JSON.stringify({ error: 'Failed to parse AI response', raw: rawContent.slice(0, 200) }),
+        { status: 502, headers }
+      );
+    }
+
+    // No KV write — client handles persisting task changes back into the plan
+    return new Response(JSON.stringify(parsed), { headers });
+  } catch (err) {
+    console.error('Task-chat error:', err);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers }

@@ -425,6 +425,174 @@ body {
   color: var(--gray-400);
   font-size: 13px;
 }
+
+/* Task Chat Drawer */
+.task-chat-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 200;
+}
+.task-chat-overlay.visible { display: block; }
+
+.task-chat-drawer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 85vh;
+  background: white;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+  z-index: 210;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+.task-chat-drawer.visible { transform: translateY(0); }
+
+.task-chat-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--gray-300);
+  border-radius: 2px;
+  margin: 8px auto 0;
+}
+
+.task-chat-header {
+  padding: 4px 16px 12px;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.task-chat-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray-900);
+  flex: 1;
+  padding-top: 8px;
+}
+
+.task-chat-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--gray-200);
+  color: var(--gray-500);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.task-chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.task-chat-desc {
+  font-size: 14px;
+  color: var(--gray-600);
+  background: var(--gray-50);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  line-height: 1.6;
+  border-left: 3px solid var(--green);
+  transition: background-color 0.5s ease;
+}
+.task-chat-desc.updated {
+  background-color: var(--green-light);
+}
+
+.task-chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task-chat-msg {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.task-chat-msg.user {
+  align-self: flex-end;
+  background: var(--green);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+.task-chat-msg.assistant {
+  align-self: flex-start;
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border-bottom-left-radius: 4px;
+}
+
+.task-chat-input-bar {
+  padding: 12px 16px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--gray-200);
+  background: white;
+}
+
+.task-chat-typing {
+  align-self: flex-start;
+  padding: 10px 14px;
+  background: var(--gray-100);
+  border-radius: 12px;
+  border-bottom-left-radius: 4px;
+  font-size: 14px;
+  color: var(--gray-400);
+}
+
+.task-chat-empty {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--gray-400);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Chat button in timeline */
+.timeline-task-chat-btn {
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.timeline-task-chat-btn:hover { opacity: 1; }
+
+/* Chat button in current task card */
+.btn-chat {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  background: var(--gray-50);
+  color: var(--gray-600);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: background 0.15s;
+}
+.btn-chat:active { background: var(--gray-100); }
 </style>
 </head>
 <body>
@@ -442,6 +610,27 @@ body {
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
   <div class="loading-text">Updating your plan...</div>
+</div>
+
+<!-- Task Chat Drawer -->
+<div class="task-chat-overlay" id="taskChatOverlay" onclick="closeTaskChat()"></div>
+<div class="task-chat-drawer" id="taskChatDrawer">
+  <div class="task-chat-header">
+    <div class="task-chat-handle"></div>
+    <div class="task-chat-title" id="taskChatTitle"></div>
+    <button class="task-chat-close" onclick="closeTaskChat()">&times;</button>
+  </div>
+  <div class="task-chat-body" id="taskChatBody">
+    <div class="task-chat-desc" id="taskChatDesc"></div>
+    <div class="task-chat-messages" id="taskChatMessages"></div>
+  </div>
+  <div class="task-chat-input-bar">
+    <div style="display:flex;gap:8px">
+      <input type="text" class="chat-input" id="taskChatInput"
+             placeholder="Ask about this task..." autocomplete="off">
+      <button class="chat-send" id="taskChatSend" onclick="sendTaskChatMessage()">&#9654;</button>
+    </div>
+  </div>
 </div>
 
 <!-- Hero -->
@@ -510,6 +699,7 @@ const API_URL = API_BASE + '/api/revise-plan';
 const API_PLAN_URL = API_BASE + '/api/plan';
 const API_VERSIONS_URL = API_BASE + '/api/versions';
 const API_ROLLBACK_URL = API_BASE + '/api/rollback';
+const API_TASK_CHAT_URL = API_BASE + '/api/task-chat';
 const APP_TOKEN = 'lp-2026-fv-bermuda-xK9mP3'; // shared secret — must match Worker's APP_TOKEN
 
 // Seed plan data — used on first visit
@@ -727,6 +917,9 @@ let plan = null;
 let isLoading = false;
 let versionList = [];
 let lastUndoTimestamp = null; // tracks the most recent pre-revision version for quick undo
+let taskChatTaskId = null;       // ID of the task currently being chatted about
+let taskChatHistory = {};        // { [taskId]: [{ role, content }] } — session-only
+let taskChatLoading = false;
 const collapsedSections = { stats: false, activity: false, timeline: false, decision: true, versions: true };
 
 // =====================================================
@@ -769,6 +962,21 @@ async function init() {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
+    }
+  });
+
+  // Enter key sends task chat message
+  document.getElementById('taskChatInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendTaskChatMessage();
+    }
+  });
+
+  // Escape key closes task chat drawer
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && taskChatTaskId) {
+      closeTaskChat();
     }
   });
 }
@@ -904,6 +1112,7 @@ function renderCurrentTask() {
         <div class="task-desc">${next.description}</div>
         ${materialsHtml}
         ${next.notes ? `<div class="task-desc" style="font-size:13px;color:var(--gray-500);margin-bottom:16px">${next.notes}</div>` : ''}
+        <button class="btn-chat" onclick="openTaskChat('${next.id}')">💬 Chat about this task</button>
         <div class="task-actions">
           <button class="btn btn-done" onclick="quickAction('done')">Done</button>
           <button class="btn btn-skip" onclick="quickAction('skip')">Couldn't Do It</button>
@@ -1013,6 +1222,7 @@ function renderTimeline() {
           <div class="timeline-task-header">
             <span class="timeline-task-status">${getStatusIcon(t.status)}</span>
             <span class="timeline-task-name">${t.title}</span>
+            <span class="timeline-task-chat-btn" onclick="event.stopPropagation(); openTaskChat('${t.id}')" title="Chat about this task">💬</span>
             <span class="timeline-task-date">${formatDate(t.targetDate)}</span>
           </div>
           <div class="timeline-task-details">
@@ -1264,6 +1474,162 @@ async function restoreVersion(timestamp) {
 async function quickUndo() {
   if (!lastUndoTimestamp) return;
   await restoreVersion(lastUndoTimestamp);
+}
+
+// =====================================================
+// TASK CHAT DRAWER
+// =====================================================
+function openTaskChat(taskId) {
+  const task = plan.tasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  taskChatTaskId = taskId;
+
+  // Populate header and description
+  document.getElementById('taskChatTitle').textContent = task.title;
+  renderTaskChatDesc(task);
+  renderTaskChatMessages(taskId);
+
+  // Show drawer
+  document.getElementById('taskChatOverlay').classList.add('visible');
+  document.getElementById('taskChatDrawer').classList.add('visible');
+
+  // Focus input after animation
+  setTimeout(() => document.getElementById('taskChatInput').focus(), 350);
+
+  // Hide the main chat bar while drawer is open
+  document.querySelector('.chat-bar').style.display = 'none';
+}
+
+function closeTaskChat() {
+  document.getElementById('taskChatOverlay').classList.remove('visible');
+  document.getElementById('taskChatDrawer').classList.remove('visible');
+  taskChatTaskId = null;
+
+  // Restore main chat bar
+  document.querySelector('.chat-bar').style.display = '';
+
+  // Re-render to reflect any description changes
+  render();
+}
+
+function renderTaskChatDesc(task) {
+  const desc = document.getElementById('taskChatDesc');
+  let html = `<p>${escapeHtml(task.description)}</p>`;
+  if (task.notes) {
+    html += `<p style="margin-top:8px;color:var(--gray-500);font-size:13px">${escapeHtml(task.notes)}</p>`;
+  }
+  if (task.materials && task.materials.length) {
+    html += `<p style="margin-top:8px;font-size:13px"><strong>Materials:</strong> ${task.materials.map(m => escapeHtml(m)).join(', ')}</p>`;
+  }
+  desc.innerHTML = html;
+}
+
+function renderTaskChatMessages(taskId) {
+  const container = document.getElementById('taskChatMessages');
+  const history = taskChatHistory[taskId] || [];
+
+  if (history.length === 0) {
+    container.innerHTML = '<div class="task-chat-empty">Ask a question about this task or request changes to the description.</div>';
+    return;
+  }
+
+  container.innerHTML = history.map(msg =>
+    `<div class="task-chat-msg ${msg.role}">${escapeHtml(msg.content)}</div>`
+  ).join('');
+
+  // Auto-scroll to bottom
+  const body = document.getElementById('taskChatBody');
+  body.scrollTop = body.scrollHeight;
+}
+
+async function sendTaskChatMessage() {
+  const input = document.getElementById('taskChatInput');
+  const message = input.value.trim();
+  if (!message || taskChatLoading || !taskChatTaskId) return;
+
+  const taskId = taskChatTaskId;
+  const task = plan.tasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  // Initialize history for this task if needed
+  if (!taskChatHistory[taskId]) taskChatHistory[taskId] = [];
+
+  // Add user message to history and render
+  taskChatHistory[taskId].push({ role: 'user', content: message });
+  renderTaskChatMessages(taskId);
+
+  input.value = '';
+  taskChatLoading = true;
+  document.getElementById('taskChatSend').disabled = true;
+
+  // Show typing indicator
+  const messagesEl = document.getElementById('taskChatMessages');
+  const typingEl = document.createElement('div');
+  typingEl.className = 'task-chat-typing';
+  typingEl.textContent = 'Thinking...';
+  messagesEl.appendChild(typingEl);
+  document.getElementById('taskChatBody').scrollTop =
+    document.getElementById('taskChatBody').scrollHeight;
+
+  try {
+    const response = await fetch(API_TASK_CHAT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-App-Token': APP_TOKEN },
+      body: JSON.stringify({
+        task: task,
+        message: message,
+        chatHistory: taskChatHistory[taskId].slice(0, -1), // exclude current msg
+        planContext: plan.context || {},
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `API error (${response.status})`);
+    }
+
+    const data = await response.json();
+
+    // Add assistant response to history
+    taskChatHistory[taskId].push({ role: 'assistant', content: data.response });
+
+    // If the task was updated, merge changes back into the plan
+    if (data.descriptionChanged && data.updatedTask) {
+      const taskIndex = plan.tasks.findIndex(t => t.id === taskId);
+      if (taskIndex !== -1) {
+        // Only update safe fields
+        const safe = ['description', 'notes', 'materials', 'estimatedTime', 'cost'];
+        safe.forEach(field => {
+          if (data.updatedTask[field] !== undefined) {
+            plan.tasks[taskIndex][field] = data.updatedTask[field];
+          }
+        });
+        plan.lastUpdated = getToday();
+
+        // Persist the plan change
+        await savePlan();
+
+        // Flash the description panel to indicate update
+        renderTaskChatDesc(plan.tasks[taskIndex]);
+        const descEl = document.getElementById('taskChatDesc');
+        descEl.classList.add('updated');
+        setTimeout(() => descEl.classList.remove('updated'), 1500);
+      }
+    }
+  } catch (err) {
+    // Add error as a system message
+    taskChatHistory[taskId].push({
+      role: 'assistant',
+      content: 'Sorry, something went wrong: ' + err.message,
+    });
+  } finally {
+    // Remove typing indicator and re-render
+    if (typingEl.parentNode) typingEl.remove();
+    taskChatLoading = false;
+    document.getElementById('taskChatSend').disabled = false;
+    renderTaskChatMessages(taskId);
+  }
 }
 
 // Boot
