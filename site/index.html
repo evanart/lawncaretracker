@@ -44,9 +44,13 @@ body {
 
 /* Hero / Status Banner */
 .hero {
-  padding: 24px 20px 20px;
   background: white;
   border-bottom: 1px solid var(--gray-200);
+}
+.hero-inner {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 24px 20px 20px;
 }
 .hero-date {
   font-size: 13px;
@@ -289,6 +293,12 @@ body {
 .decision-notes { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
 .decision-date { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
 
+/* Dashboard width constraint */
+.dashboard-inner {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
 /* Chat Input */
 .chat-bar {
   position: fixed;
@@ -300,6 +310,10 @@ body {
   padding: 12px 16px;
   padding-bottom: max(12px, env(safe-area-inset-bottom));
   z-index: 50;
+}
+.chat-bar-inner {
+  max-width: 680px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -309,12 +323,17 @@ body {
   padding: 12px 14px;
   border: 1px solid var(--gray-300);
   border-radius: 10px;
-  font-size: 15px;
+  font-size: 16px; /* 16px minimum prevents iOS auto-zoom on focus */
   font-family: inherit;
   outline: none;
   background: var(--gray-50);
   transition: border-color 0.15s;
   min-height: 44px;
+  max-height: 160px;
+  resize: none;
+  overflow-y: auto;
+  line-height: 1.5;
+  display: block;
 }
 .chat-input:focus { border-color: var(--green); }
 .chat-input::placeholder { color: var(--gray-400); }
@@ -660,7 +679,7 @@ body {
 }
 .meta-value:hover { border-bottom-color: var(--gray-300); }
 .meta-input {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--gray-700);
   border: none;
@@ -717,7 +736,7 @@ input[type="date"].meta-input {
   padding: 10px 12px;
   border: 1px solid var(--gray-300);
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 16px;
   font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
   line-height: 1.6;
   resize: vertical;
@@ -801,7 +820,7 @@ input[type="date"].meta-input {
   padding: 8px 10px;
   border: 1px solid var(--gray-300);
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 16px;
   font-family: inherit;
   outline: none;
   background: var(--gray-50);
@@ -1171,6 +1190,11 @@ function daysUntil(dateStr) {
   return Math.round((target - today) / (1000 * 60 * 60 * 24));
 }
 
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+}
+
 function getNextTask(plan) {
   if (!plan) return null;
   return plan.tasks.find(t => t.status === 'not-started' || t.status === 'in-progress');
@@ -1359,9 +1383,11 @@ function Hero({ plan }) {
   if (!next) {
     return html`
       <div class="hero">
-        <div class="hero-date">${today}</div>
-        <div class="hero-next">All caught up!</div>
-        <span class="hero-sub on-track">No pending tasks</span>
+        <div class="hero-inner">
+          <div class="hero-date">${today}</div>
+          <div class="hero-next">All caught up!</div>
+          <span class="hero-sub on-track">No pending tasks</span>
+        </div>
       </div>
     `;
   }
@@ -1381,9 +1407,11 @@ function Hero({ plan }) {
 
   return html`
     <div class="hero">
-      <div class="hero-date">${today}</div>
-      <div class="hero-next">Next up: ${next.title}</div>
-      <span class=${"hero-sub " + statusClass}>${statusText}</span>
+      <div class="hero-inner">
+        <div class="hero-date">${today}</div>
+        <div class="hero-next">Next up: ${next.title}</div>
+        <span class=${"hero-sub " + statusClass}>${statusText}</span>
+      </div>
     </div>
   `;
 }
@@ -1556,23 +1584,30 @@ function ChatBar({ onSend, disabled, placeholder, showUndo, onUndo, inputRef, in
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       onSend();
+      if (inputRef && inputRef.current) {
+        inputRef.current.style.height = 'auto';
+      }
     }
   };
 
   return html`
     <div class="chat-bar">
+      <div class="chat-bar-inner">
       ${showUndo && html`
         <div class="undo-bar visible">
           <button class="undo-btn" onClick=${onUndo}>\u21BB Undo last change</button>
         </div>
       `}
-      <div style="display:flex;gap:8px;flex:1">
-        <input type="text" class="chat-input" ref=${inputRef}
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <textarea class="chat-input" ref=${inputRef}
                placeholder=${placeholder || "Tell me what's happening..."}
                autocomplete="off" disabled=${disabled}
-               value=${inputValue} onInput=${e => onInputChange(e.target.value)}
-               onKeyDown=${handleKeyDown} />
+               rows="1"
+               value=${inputValue}
+               onInput=${e => { onInputChange(e.target.value); autoResize(e.target); }}
+               onKeyDown=${handleKeyDown}></textarea>
         <button class="chat-send" disabled=${disabled} onClick=${onSend}>\u25B6</button>
+      </div>
       </div>
     </div>
   `;
@@ -1585,27 +1620,29 @@ function Dashboard({ plan, isLoading, versions, toast, collapsed, lastUndoTimest
   return html`
     <div class="page-enter">
       <${Hero} plan=${plan} />
-      <${CurrentTaskCard} plan=${plan} onQuickAction=${onQuickAction} onNavigate=${onNavigate} />
+      <div class="dashboard-inner">
+        <${CurrentTaskCard} plan=${plan} onQuickAction=${onQuickAction} onNavigate=${onNavigate} />
 
-      <${CollapsibleCard} title="Summary" collapsed=${collapsed.stats} onToggle=${() => onToggleCard('stats')}>
-        <${StatsCard} plan=${plan} />
-      <//>
+        <${CollapsibleCard} title="Summary" collapsed=${collapsed.stats} onToggle=${() => onToggleCard('stats')}>
+          <${StatsCard} plan=${plan} />
+        <//>
 
-      <${CollapsibleCard} title="Recent Activity" collapsed=${collapsed.activity} onToggle=${() => onToggleCard('activity')}>
-        <${ActivityCard} plan=${plan} />
-      <//>
+        <${CollapsibleCard} title="Recent Activity" collapsed=${collapsed.activity} onToggle=${() => onToggleCard('activity')}>
+          <${ActivityCard} plan=${plan} />
+        <//>
 
-      <${CollapsibleCard} title="Version History" collapsed=${collapsed.versions} onToggle=${() => onToggleCard('versions')}>
-        <${VersionHistoryCard} versions=${versions} onRestore=${onRestoreVersion} />
-      <//>
+        <${CollapsibleCard} title="Version History" collapsed=${collapsed.versions} onToggle=${() => onToggleCard('versions')}>
+          <${VersionHistoryCard} versions=${versions} onRestore=${onRestoreVersion} />
+        <//>
 
-      <${CollapsibleCard} title="Full Plan Timeline" collapsed=${collapsed.timeline} onToggle=${() => onToggleCard('timeline')}>
-        <${TimelineCard} plan=${plan} onNavigate=${onNavigate} />
-      <//>
+        <${CollapsibleCard} title="Full Plan Timeline" collapsed=${collapsed.timeline} onToggle=${() => onToggleCard('timeline')}>
+          <${TimelineCard} plan=${plan} onNavigate=${onNavigate} />
+        <//>
 
-      <${CollapsibleCard} title="Decision Log" collapsed=${collapsed.decision} onToggle=${() => onToggleCard('decision')}>
-        <${DecisionCard} plan=${plan} />
-      <//>
+        <${CollapsibleCard} title="Decision Log" collapsed=${collapsed.decision} onToggle=${() => onToggleCard('decision')}>
+          <${DecisionCard} plan=${plan} />
+        <//>
+      </div>
 
       <${ChatBar}
         onSend=${onSendMessage}
@@ -1851,11 +1888,18 @@ function TaskChatSection({ taskId, plan, chatHistory, onSendChat }) {
         ${loading && html`<div class="task-chat-typing">Thinking...</div>`}
       </div>
       <div class="task-chat-input-row">
-        <input type="text" class="chat-input" value=${input}
-               onInput=${e => setInput(e.target.value)}
+        <textarea class="chat-input" value=${input}
+               onInput=${e => { setInput(e.target.value); autoResize(e.target); }}
                placeholder="Ask about this task..."
                disabled=${loading}
-               onKeyDown=${e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} />
+               rows="1"
+               onKeyDown=${e => {
+                 if (e.key === 'Enter' && !e.shiftKey) {
+                   e.preventDefault();
+                   e.target.style.height = 'auto';
+                   send();
+                 }
+               }}></textarea>
         <button class="chat-send" disabled=${loading} onClick=${send}>\u25B6</button>
       </div>
     </div>
