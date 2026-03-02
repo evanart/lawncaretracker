@@ -1,9 +1,11 @@
 // Lawn Plan API — Cloudflare Worker
-// Proxies natural language plan updates to Claude Opus 4.6 via the Anthropic API
+// Proxies natural language plan updates to Claude via the Anthropic API
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL = 'claude-opus-4-6';
-const MAX_TOKENS = 8192;
+const MODEL = 'claude-opus-4-6';           // revise-plan: complex full-plan reasoning
+const TASK_CHAT_MODEL = 'claude-sonnet-4-5'; // task-chat: faster, sufficient for single-task Q&A
+const MAX_TOKENS = 8192;           // revise-plan: returns entire plan JSON
+const TASK_CHAT_MAX_TOKENS = 2048; // task-chat: one task object + short reply
 const DAILY_RATE_LIMIT = 20;
 
 const SYSTEM_PROMPT = `You are a lawn care planning assistant managing a spring lawn care schedule for a homeowner in Fuquay-Varina, NC with Bermuda grass. You receive the current plan state as JSON and a natural language message from the user.
@@ -305,7 +307,12 @@ async function handleTaskChat(request, env, headers) {
       );
     }
 
-    // Build multi-turn messages array
+    // Build system prompt with task context embedded once (not repeated on every turn)
+    const systemWithContext =
+      TASK_CHAT_SYSTEM_PROMPT +
+      `\n\nTASK CONTEXT:\n${JSON.stringify(task)}\n\nPLAN CONTEXT:\n${JSON.stringify(planContext || {})}`;
+
+    // Build multi-turn messages array (clean conversation turns only)
     const messages = [];
 
     // Add prior conversation turns (capped at last 10)
@@ -314,11 +321,8 @@ async function handleTaskChat(request, env, headers) {
       messages.push({ role: entry.role, content: entry.content });
     }
 
-    // Final user message includes task data + context
-    messages.push({
-      role: 'user',
-      content: `Task data:\n${JSON.stringify(task)}\n\nPlan context:\n${JSON.stringify(planContext || {})}\n\nUser message: "${message}"`,
-    });
+    // Current user message — just the user's words, no repeated task JSON
+    messages.push({ role: 'user', content: message });
 
     // Call Anthropic API
     const anthropicResponse = await fetch(ANTHROPIC_API_URL, {
@@ -329,9 +333,9 @@ async function handleTaskChat(request, env, headers) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system: TASK_CHAT_SYSTEM_PROMPT,
+        model: TASK_CHAT_MODEL,
+        max_tokens: TASK_CHAT_MAX_TOKENS,
+        system: systemWithContext,
         messages,
       }),
     });
