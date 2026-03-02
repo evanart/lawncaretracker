@@ -23,7 +23,7 @@ TYPES OF MESSAGES YOU MAY RECEIVE:
 
 PLAN MODIFICATION RULES:
 - When rescheduling: push to the next available weekend. Cascade dependent tasks. Never stack two major projects (3+ hours) on the same weekend.
-- When adding tasks: generate a full task object with id, title, description, targetDate, deadline, estimatedTime, materials, cost, dependencies, phase, and notes. Place it logically in the timeline.
+- When adding tasks: generate a full task object with id, title, description, targetDate, deadline, estimatedTime, materials, cost, dependencies, phase, and notes. Place it logically in the timeline. Set userNotes to "" for new tasks.
 - When updating decisions: add to the decisions array with today's date.
 - When receiving information (quotes, soil results, etc.): update the relevant task's notes and cost fields, and add to context if broadly relevant.
 - When answering questions: provide helpful advice in your response. Only modify the plan if the answer implies an action.
@@ -31,6 +31,8 @@ PLAN MODIFICATION RULES:
 - Scalp mow constraint: can only happen late March through mid April when Bermuda is greening.
 - Always recalculate summary stats (budget, completion count) when the plan changes.
 - NEVER modify the activityLog array. Return it exactly as received. The client handles activity logging separately.
+- NEVER modify the userNotes field on any task. This is the user's personal notes and must be preserved exactly as-is.
+- Format task descriptions using markdown for readability. Use headers (##, ###) for sections, bullet lists for steps, **bold** for emphasis, and \`code\` for specific commands or product names.
 
 RESPONSE FORMAT — Respond with ONLY a valid JSON object:
 {
@@ -57,9 +59,10 @@ RESPONSE FORMAT — Respond with ONLY a valid JSON object:
 
 RULES:
 - You may update: description, notes, materials, estimatedTime, cost
-- You must NOT change: id, title, targetDate, deadline, status, dependsOn, phase, weekend, diyOrPro
+- You must NOT change: id, title, targetDate, deadline, status, dependsOn, phase, weekend, diyOrPro, userNotes
 - If the user is just asking a question, set descriptionChanged to false and return the task unchanged
 - Keep descriptions actionable and step-by-step
+- Format descriptions using markdown for readability: use headers (##, ###), bullet lists, **bold**, and \`code\` for commands/products
 - Reference Bermuda grass and Fuquay-Varina, NC climate when relevant
 - Do not include any text outside the JSON object. Do not wrap in markdown code fences.`;
 
@@ -236,6 +239,16 @@ Revise the plan as needed and respond.`;
 
     // Save a version snapshot of the pre-revision plan, then persist the revised plan
     if (parsed.revisedPlan) {
+      // Preserve userNotes from the current plan — AI must never overwrite these
+      if (parsed.revisedPlan.tasks && currentPlan.tasks) {
+        for (const task of parsed.revisedPlan.tasks) {
+          const original = currentPlan.tasks.find(t => t.id === task.id);
+          if (original && original.userNotes !== undefined) {
+            task.userNotes = original.userNotes;
+          }
+        }
+      }
+
       try {
         // Snapshot the plan as it was BEFORE the AI changed it (so undo restores this)
         await saveVersion(env, currentPlan, {
