@@ -219,7 +219,7 @@ body {
   align-items: center;
   gap: 8px;
 }
-.timeline-task-status { font-size: 16px; flex-shrink: 0; }
+.timeline-task-header > div { flex-shrink: 0; }
 .timeline-task-name {
   font-size: 14px;
   font-weight: 500;
@@ -604,7 +604,7 @@ body {
   position: relative;
 }
 .status-badge:hover { opacity: 0.85; }
-.status-badge.not-started { background: var(--gray-100); color: var(--gray-600); }
+.status-badge.ready { background: var(--gray-100); color: var(--gray-600); }
 .status-badge.in-progress { background: var(--blue-light); color: #1d4ed8; }
 .status-badge.done { background: var(--green-light); color: #166534; }
 .status-badge.skipped { background: var(--amber-light); color: #92400e; }
@@ -963,7 +963,7 @@ const SEED_PLAN = {
       targetDate: "2026-02-28",
       deadline: "2026-03-14",
       estimatedTime: "30 minutes",
-      status: "not-started",
+      status: "ready",
       diyOrPro: "diy",
       materials: ["Zip-lock bags or soil sample bags", "Trowel"],
       cost: "$0-8",
@@ -980,7 +980,7 @@ const SEED_PLAN = {
       targetDate: "2026-03-01",
       deadline: "2026-03-08",
       estimatedTime: "2-3 hours",
-      status: "not-started",
+      status: "ready",
       diyOrPro: "diy",
       materials: ["Leaf rake", "Yard waste bags or tarp"],
       cost: "~$10",
@@ -997,7 +997,7 @@ const SEED_PLAN = {
       targetDate: "2026-03-04",
       deadline: "2026-03-06",
       estimatedTime: "1 hour",
-      status: "not-started",
+      status: "ready",
       diyOrPro: "diy",
       materials: ["Topsoil (8-10 bags)", "Coarse sand (3 bags)", "Landscape fabric (4ftx50ft)", "Landscape staples (50-pack)", "Landscape edging/timbers (42 ln ft)", "EWF (~20 bags or bulk)"],
       cost: "$170-315",
@@ -1014,7 +1014,7 @@ const SEED_PLAN = {
       targetDate: "2026-03-07",
       deadline: "2026-03-22",
       estimatedTime: "2-3 hours",
-      status: "not-started",
+      status: "ready",
       diyOrPro: "diy",
       materials: ["Topsoil (from shopping trip 1)", "Sand (from shopping trip 1)", "Wheelbarrow", "Shovel", "Rake", "Tamper"],
       cost: "$40-65",
@@ -1031,7 +1031,7 @@ const SEED_PLAN = {
       targetDate: "2026-03-14",
       deadline: "2026-03-29",
       estimatedTime: "4-6 hours",
-      status: "not-started",
+      status: "ready",
       diyOrPro: "diy",
       materials: ["EWF (~2 cu yd)", "Landscape fabric", "Landscape staples", "Edging/timbers (42 ln ft)", "Stakes", "Rubber mallet", "Utility knife"],
       cost: "$140-250",
@@ -1048,7 +1048,7 @@ const SEED_PLAN = {
       targetDate: "2026-03-21",
       deadline: "2026-04-12",
       estimatedTime: "1-2 hours",
-      status: "not-started",
+      status: "ready",
       diyOrPro: "diy",
       materials: ["Mower", "Bags for clippings"],
       cost: "$0",
@@ -1066,7 +1066,7 @@ const SEED_PLAN = {
       targetDate: "2026-03-30",
       deadline: "2026-04-03",
       estimatedTime: "1 hour",
-      status: "not-started",
+      status: "ready",
       diyOrPro: "diy",
       materials: ["Pea gravel or crushed granite (~1 cu yd)", "Polymeric sand (optional)"],
       cost: "$55-140",
@@ -1083,7 +1083,7 @@ const SEED_PLAN = {
       targetDate: "2026-04-04",
       deadline: "2026-04-19",
       estimatedTime: "3-5 hours",
-      status: "not-started",
+      status: "ready",
       diyOrPro: "diy",
       materials: ["Pea gravel or crushed granite (from shopping trip 2)", "Landscape fabric (leftover)", "Polymeric sand (optional)"],
       cost: "$60-160",
@@ -1100,7 +1100,7 @@ const SEED_PLAN = {
       targetDate: "2026-04-06",
       deadline: "2026-04-17",
       estimatedTime: "15-30 minutes",
-      status: "not-started",
+      status: "ready",
       diyOrPro: "diy",
       materials: [],
       cost: "$0",
@@ -1117,7 +1117,7 @@ const SEED_PLAN = {
       targetDate: "2026-05-25",
       deadline: "2026-06-30",
       estimatedTime: "Handled by Leapfrog",
-      status: "not-started",
+      status: "ready",
       diyOrPro: "pro",
       materials: [],
       cost: "$375-775+ (get quote)",
@@ -1134,7 +1134,7 @@ const SEED_PLAN = {
       targetDate: "2026-07-11",
       deadline: "2026-07-31",
       estimatedTime: "30 minutes",
-      status: "not-started",
+      status: "ready",
       diyOrPro: "diy",
       materials: [],
       cost: "$0",
@@ -1197,7 +1197,7 @@ function autoResize(el) {
 
 function getNextTask(plan) {
   if (!plan) return null;
-  return plan.tasks.find(t => t.status === 'not-started' || t.status === 'in-progress');
+  return plan.tasks.find(t => t.status === 'ready' || t.status === 'in-progress');
 }
 
 function getStatusIcon(status) {
@@ -1205,7 +1205,7 @@ function getStatusIcon(status) {
     case 'done': return '\u2705';
     case 'skipped': return '\u23ED\uFE0F';
     case 'in-progress': return '\uD83D\uDD04';
-    default: return '\u2B1C';
+    case 'ready': default: return '\u2B1C';
   }
 }
 
@@ -1214,7 +1214,7 @@ function getStatusLabel(status) {
     case 'done': return 'Done';
     case 'skipped': return 'Skipped';
     case 'in-progress': return 'In Progress';
-    default: return 'Not Started';
+    case 'ready': default: return 'Ready';
   }
 }
 
@@ -1377,87 +1377,40 @@ function CollapsibleCard({ title, collapsed, onToggle, children }) {
 // DASHBOARD COMPONENTS
 // =====================================================
 function Hero({ plan }) {
-  const next = getNextTask(plan);
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const total = plan.tasks.length;
+  const done = plan.tasks.filter(t => t.status === 'done').length;
+  const inProgress = plan.tasks.filter(t => t.status === 'in-progress').length;
+  const skipped = plan.tasks.filter(t => t.status === 'skipped').length;
+  const remaining = total - done - skipped;
 
-  if (!next) {
-    return html`
-      <div class="hero">
-        <div class="hero-inner">
-          <div class="hero-date">${today}</div>
-          <div class="hero-next">All caught up!</div>
-          <span class="hero-sub on-track">No pending tasks</span>
-        </div>
-      </div>
-    `;
-  }
-
-  const days = daysUntil(next.targetDate);
-  let statusClass, statusText;
-  if (days < 0) {
-    statusClass = 'overdue';
-    statusText = 'Target: ' + formatDate(next.targetDate) + ' \u2014 overdue by ' + Math.abs(days) + ' day' + (Math.abs(days) !== 1 ? 's' : '');
-  } else if (days <= 3) {
-    statusClass = 'due-soon';
-    statusText = 'Target: ' + formatDate(next.targetDate) + ' \u2014 ' + (days === 0 ? 'today' : days === 1 ? 'tomorrow' : days + ' days away');
-  } else {
+  let headline, statusClass, statusText;
+  if (remaining === 0) {
+    headline = 'All caught up!';
     statusClass = 'on-track';
-    statusText = 'Target: ' + formatDate(next.targetDate) + ' \u2014 ' + days + ' days away';
+    statusText = done + ' of ' + total + ' tasks complete';
+  } else {
+    headline = done + ' of ' + total + ' tasks complete';
+    const overdue = plan.tasks.filter(t => (t.status === 'ready' || t.status === 'in-progress') && daysUntil(t.targetDate) < 0);
+    const dueSoon = plan.tasks.filter(t => (t.status === 'ready' || t.status === 'in-progress') && daysUntil(t.targetDate) >= 0 && daysUntil(t.targetDate) <= 3);
+    if (overdue.length > 0) {
+      statusClass = 'overdue';
+      statusText = overdue.length + ' task' + (overdue.length !== 1 ? 's' : '') + ' overdue';
+    } else if (dueSoon.length > 0) {
+      statusClass = 'due-soon';
+      statusText = dueSoon.length + ' task' + (dueSoon.length !== 1 ? 's' : '') + ' due soon';
+    } else {
+      statusClass = 'on-track';
+      statusText = remaining + ' remaining' + (inProgress > 0 ? ' \u00B7 ' + inProgress + ' in progress' : '');
+    }
   }
 
   return html`
     <div class="hero">
       <div class="hero-inner">
         <div class="hero-date">${today}</div>
-        <div class="hero-next">Next up: ${next.title}</div>
+        <div class="hero-next">${headline}</div>
         <span class=${"hero-sub " + statusClass}>${statusText}</span>
-      </div>
-    </div>
-  `;
-}
-
-function CurrentTaskCard({ plan, onQuickAction, onNavigate }) {
-  const next = getNextTask(plan);
-
-  if (!next) {
-    return html`
-      <div class="card">
-        <div class="all-done">
-          <div class="all-done-icon">\uD83C\uDF89</div>
-          <div class="all-done-title">All tasks complete!</div>
-          <div class="all-done-sub">Use the chat to add new tasks or ask questions.</div>
-        </div>
-      </div>
-    `;
-  }
-
-  const days = daysUntil(next.targetDate);
-  let urgencyClass = '';
-  if (days < 0) urgencyClass = 'overdue';
-  else if (days <= 3) urgencyClass = 'due-soon';
-
-  return html`
-    <div class=${"card current-task " + urgencyClass}>
-      <div class="card-body">
-        <div class="task-title" style="cursor:pointer" onClick=${() => onNavigate('#/task/' + next.id)}>${next.title}</div>
-        <div class="task-meta">
-          <span>${next.estimatedTime}</span>
-          <span>${next.cost !== '$0' ? next.cost : 'Free'}</span>
-          <span>${next.diyOrPro === 'pro' ? 'Pro' : 'DIY'}</span>
-        </div>
-        <${MarkdownContent} text=${next.description} />
-        ${next.materials && next.materials.length > 0 && html`
-          <div class="task-materials">
-            <strong>Materials:</strong>
-            <ul>${next.materials.map(m => html`<li>${m}</li>`)}</ul>
-          </div>
-        `}
-        ${next.notes && html`<div style="font-size:13px;color:var(--gray-500);margin-bottom:16px">${next.notes}</div>`}
-        <button class="btn-chat" onClick=${() => onNavigate('#/task/' + next.id)}>View task details</button>
-        <div class="task-actions">
-          <button class="btn btn-done" onClick=${() => onQuickAction('done')}>Done</button>
-          <button class="btn btn-skip" onClick=${() => onQuickAction('skip')}>Couldn't Do It</button>
-        </div>
       </div>
     </div>
   `;
@@ -1532,7 +1485,7 @@ function VersionHistoryCard({ versions, onRestore }) {
   `;
 }
 
-function TimelineCard({ plan, onNavigate }) {
+function TimelineCard({ plan, onNavigate, onUpdateTask }) {
   const groups = {};
   plan.tasks.forEach(t => {
     const key = t.weekend || 'Unscheduled';
@@ -1550,7 +1503,7 @@ function TimelineCard({ plan, onNavigate }) {
         ${tasks.map(t => html`
           <div class=${"timeline-task" + (t.status === 'done' ? " done" : "") + (expanded[t.id] ? " expanded" : "")} key=${t.id}>
             <div class="timeline-task-header" onClick=${() => toggle(t.id)}>
-              <span class="timeline-task-status">${getStatusIcon(t.status)}</span>
+              <${StatusBadge} status=${t.status} onChange=${(s) => onUpdateTask(t.id, { status: s })} />
               <span class="timeline-task-name" onClick=${(e) => { e.stopPropagation(); onNavigate('#/task/' + t.id); }}>${t.title}</span>
               <span class="timeline-task-date">${formatDate(t.targetDate)}</span>
             </div>
@@ -1614,17 +1567,26 @@ function ChatBar({ onSend, disabled, placeholder, showUndo, onUndo, inputRef, in
 }
 
 function Dashboard({ plan, isLoading, versions, toast, collapsed, lastUndoTimestamp,
-                      onSendMessage, onQuickAction, onToggleCard, onRestoreVersion,
-                      onQuickUndo, onDismissToast, onNavigate,
+                      onSendMessage, onToggleCard, onRestoreVersion,
+                      onQuickUndo, onDismissToast, onNavigate, onUpdateTask,
                       chatInputRef, chatInputValue, onChatInputChange }) {
   return html`
     <div class="page-enter">
       <${Hero} plan=${plan} />
       <div class="dashboard-inner">
-        <${CurrentTaskCard} plan=${plan} onQuickAction=${onQuickAction} onNavigate=${onNavigate} />
+        <div class="card">
+          <div class="card-header" style="cursor:default">Plan Timeline</div>
+          <div class="card-body">
+            <${TimelineCard} plan=${plan} onNavigate=${onNavigate} onUpdateTask=${onUpdateTask} />
+          </div>
+        </div>
 
         <${CollapsibleCard} title="Summary" collapsed=${collapsed.stats} onToggle=${() => onToggleCard('stats')}>
           <${StatsCard} plan=${plan} />
+        <//>
+
+        <${CollapsibleCard} title="Decision Log" collapsed=${collapsed.decision} onToggle=${() => onToggleCard('decision')}>
+          <${DecisionCard} plan=${plan} />
         <//>
 
         <${CollapsibleCard} title="Recent Activity" collapsed=${collapsed.activity} onToggle=${() => onToggleCard('activity')}>
@@ -1633,14 +1595,6 @@ function Dashboard({ plan, isLoading, versions, toast, collapsed, lastUndoTimest
 
         <${CollapsibleCard} title="Version History" collapsed=${collapsed.versions} onToggle=${() => onToggleCard('versions')}>
           <${VersionHistoryCard} versions=${versions} onRestore=${onRestoreVersion} />
-        <//>
-
-        <${CollapsibleCard} title="Full Plan Timeline" collapsed=${collapsed.timeline} onToggle=${() => onToggleCard('timeline')}>
-          <${TimelineCard} plan=${plan} onNavigate=${onNavigate} />
-        <//>
-
-        <${CollapsibleCard} title="Decision Log" collapsed=${collapsed.decision} onToggle=${() => onToggleCard('decision')}>
-          <${DecisionCard} plan=${plan} />
         <//>
       </div>
 
@@ -1671,7 +1625,7 @@ function StatusBadge({ status, onChange }) {
     return () => document.removeEventListener('click', handler);
   }, [open]);
 
-  const options = ['not-started', 'in-progress', 'done', 'skipped'];
+  const options = ['ready', 'in-progress', 'done', 'skipped'];
 
   return html`
     <div style="position:relative;display:inline-block" ref=${ref}>
@@ -2043,7 +1997,7 @@ function App() {
   const [lastUndoTimestamp, setLastUndoTimestamp] = useState(null);
   const [taskChatHistory, setTaskChatHistory] = useState({});
   const [collapsed, setCollapsed] = useState({
-    stats: false, activity: false, timeline: false, decision: true, versions: true
+    stats: false, activity: true, decision: false, versions: true
   });
   const [route, setRoute] = useState(location.hash || '#/');
   const [chatInputValue, setChatInputValue] = useState('');
@@ -2120,24 +2074,6 @@ function App() {
     });
     debouncedSave();
   }, [debouncedSave]);
-
-  // Quick action (done/skip)
-  const quickAction = useCallback((type) => {
-    if (!planRef.current) return;
-    const next = getNextTask(planRef.current);
-    if (!next) return;
-    if (type === 'done') {
-      setChatInputValue('Finished "' + next.title + '"');
-      // Auto-send after a tick to let state update
-      setTimeout(() => {
-        sendMessage('Finished "' + next.title + '"');
-        setChatInputValue('');
-      }, 0);
-    } else {
-      setChatInputValue('Couldn\'t do "' + next.title + '" \u2014 ');
-      setTimeout(() => chatInputRef.current?.focus(), 0);
-    }
-  }, []);
 
   // Send main chat message
   const sendMessage = useCallback(async (overrideMsg) => {
@@ -2308,8 +2244,8 @@ function App() {
                 collapsed=${collapsed}
                 lastUndoTimestamp=${lastUndoTimestamp}
                 onSendMessage=${handleSendMessage}
-                onQuickAction=${quickAction}
                 onToggleCard=${toggleCard}
+                onUpdateTask=${updateTask}
                 onRestoreVersion=${restoreVersion}
                 onQuickUndo=${quickUndo}
                 onDismissToast=${dismissToast}
