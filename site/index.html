@@ -16,6 +16,8 @@
   --red-light: #fef2f2;
   --amber: #f59e0b;
   --amber-light: #fffbeb;
+  --blue: #3b82f6;
+  --blue-light: #dbeafe;
   --gray-50: #f9fafb;
   --gray-100: #f3f4f6;
   --gray-200: #e5e7eb;
@@ -108,7 +110,7 @@ body {
 .task-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
 .task-meta { font-size: 13px; color: var(--gray-500); margin-bottom: 12px; }
 .task-meta span { margin-right: 12px; }
-.task-desc { font-size: 14px; color: var(--gray-600); margin-bottom: 12px; line-height: 1.6; white-space: pre-wrap; }
+.task-desc { font-size: 14px; color: var(--gray-600); margin-bottom: 12px; line-height: 1.6; }
 .task-materials {
   font-size: 13px;
   color: var(--gray-600);
@@ -163,12 +165,14 @@ body {
   border-left: 4px solid var(--green);
   max-height: 60vh;
   overflow-y: auto;
+  position: relative;
 }
 .ai-toast-response {
   font-size: 15px;
   color: var(--gray-700);
   margin-bottom: 8px;
   line-height: 1.5;
+  padding-right: 32px;
 }
 .ai-toast-changes {
   font-size: 12px;
@@ -177,8 +181,8 @@ body {
 .ai-toast-changes li { margin-bottom: 2px; }
 .ai-toast-dismiss {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 12px;
+  right: 12px;
   background: var(--gray-200);
   border: none;
   width: 28px;
@@ -204,7 +208,6 @@ body {
 .timeline-task {
   padding: 10px 0;
   border-bottom: 1px solid var(--gray-100);
-  cursor: pointer;
 }
 .timeline-task:last-child { border-bottom: none; }
 .timeline-task-header {
@@ -217,7 +220,10 @@ body {
   font-size: 14px;
   font-weight: 500;
   flex: 1;
+  cursor: pointer;
+  transition: color 0.15s;
 }
+.timeline-task-name:hover { color: var(--green); }
 .timeline-task-date {
   font-size: 12px;
   color: var(--gray-400);
@@ -232,7 +238,6 @@ body {
   font-size: 13px;
   color: var(--gray-600);
   line-height: 1.6;
-  white-space: pre-wrap;
 }
 .timeline-task.expanded .timeline-task-details { display: block; }
 
@@ -401,9 +406,7 @@ body {
 .version-restore:active { background: var(--gray-100); }
 
 /* Quick Undo */
-.undo-bar {
-  display: none;
-}
+.undo-bar { display: none; }
 .undo-bar.visible { display: block; }
 .undo-btn {
   width: 100%;
@@ -425,147 +428,6 @@ body {
   padding: 20px;
   color: var(--gray-400);
   font-size: 13px;
-}
-
-/* Task Chat Drawer */
-.task-chat-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  z-index: 200;
-}
-.task-chat-overlay.visible { display: block; }
-
-.task-chat-drawer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 85vh;
-  background: white;
-  border-radius: 16px 16px 0 0;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
-  z-index: 210;
-  display: flex;
-  flex-direction: column;
-  transform: translateY(100%);
-  transition: transform 0.3s ease;
-}
-.task-chat-drawer.visible { transform: translateY(0); }
-
-.task-chat-handle {
-  width: 36px;
-  height: 4px;
-  background: var(--gray-300);
-  border-radius: 2px;
-  margin: 8px auto 0;
-}
-
-.task-chat-header {
-  padding: 4px 16px 12px;
-  border-bottom: 1px solid var(--gray-200);
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.task-chat-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--gray-900);
-  flex: 1;
-  padding-top: 8px;
-}
-
-.task-chat-close {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: none;
-  background: var(--gray-200);
-  color: var(--gray-500);
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 8px;
-}
-
-.task-chat-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-}
-
-.task-chat-desc {
-  font-size: 14px;
-  color: var(--gray-600);
-  background: var(--gray-50);
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 16px;
-  line-height: 1.6;
-  border-left: 3px solid var(--green);
-  transition: background-color 0.5s ease;
-  white-space: pre-wrap;
-}
-.task-chat-desc.updated {
-  background-color: var(--green-light);
-}
-
-.task-chat-messages {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.task-chat-msg {
-  max-width: 85%;
-  padding: 10px 14px;
-  border-radius: 12px;
-  font-size: 14px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-.task-chat-msg.user {
-  align-self: flex-end;
-  background: var(--green);
-  color: white;
-  border-bottom-right-radius: 4px;
-}
-.task-chat-msg.assistant {
-  align-self: flex-start;
-  background: var(--gray-100);
-  color: var(--gray-700);
-  border-bottom-left-radius: 4px;
-}
-
-.task-chat-input-bar {
-  padding: 12px 16px;
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
-  border-top: 1px solid var(--gray-200);
-  background: white;
-}
-
-.task-chat-typing {
-  align-self: flex-start;
-  padding: 10px 14px;
-  background: var(--gray-100);
-  border-radius: 12px;
-  border-bottom-left-radius: 4px;
-  font-size: 14px;
-  color: var(--gray-400);
-}
-
-.task-chat-empty {
-  text-align: center;
-  padding: 24px 16px;
-  color: var(--gray-400);
-  font-size: 13px;
-  line-height: 1.6;
 }
 
 /* Chat button in timeline */
@@ -595,106 +457,470 @@ body {
   transition: background 0.15s;
 }
 .btn-chat:active { background: var(--gray-100); }
+
+/* =====================================================
+   MARKDOWN CONTENT
+   ===================================================== */
+.markdown-content {
+  font-size: 14px;
+  color: var(--gray-600);
+  line-height: 1.7;
+}
+.markdown-content h1 { font-size: 20px; font-weight: 700; color: var(--gray-900); margin: 16px 0 8px; }
+.markdown-content h2 { font-size: 17px; font-weight: 700; color: var(--gray-800); margin: 14px 0 6px; }
+.markdown-content h3 { font-size: 15px; font-weight: 600; color: var(--gray-700); margin: 12px 0 4px; }
+.markdown-content h1:first-child, .markdown-content h2:first-child, .markdown-content h3:first-child { margin-top: 0; }
+.markdown-content p { margin-bottom: 8px; }
+.markdown-content p:last-child { margin-bottom: 0; }
+.markdown-content ul, .markdown-content ol { margin: 4px 0 8px 1.5em; }
+.markdown-content li { margin-bottom: 2px; }
+.markdown-content code {
+  background: var(--gray-100);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+}
+.markdown-content pre {
+  background: var(--gray-100);
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+.markdown-content pre code {
+  background: none;
+  padding: 0;
+  font-size: 13px;
+}
+.markdown-content a { color: var(--green); text-decoration: underline; }
+.markdown-content a:hover { color: #16a34a; }
+.markdown-content blockquote {
+  border-left: 3px solid var(--gray-300);
+  padding-left: 12px;
+  color: var(--gray-500);
+  margin: 8px 0;
+}
+.markdown-content strong { color: var(--gray-700); }
+.markdown-content hr { border: none; border-top: 1px solid var(--gray-200); margin: 12px 0; }
+.markdown-content table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+.markdown-content th, .markdown-content td {
+  border: 1px solid var(--gray-200);
+  padding: 6px 10px;
+  text-align: left;
+  font-size: 13px;
+}
+.markdown-content th { background: var(--gray-50); font-weight: 600; }
+
+/* =====================================================
+   TASK DETAIL PAGE
+   ===================================================== */
+.task-detail-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+  padding-bottom: 100px;
+}
+.task-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--gray-500);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  font-family: inherit;
+  transition: color 0.15s;
+}
+.task-detail-back:hover { color: var(--gray-700); }
+
+.task-detail-header {
+  margin-bottom: 16px;
+}
+.task-detail-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.task-detail-title-text {
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+  transition: border-color 0.15s;
+}
+.task-detail-title-text:hover { border-bottom-color: var(--gray-300); }
+.task-detail-title input {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--gray-900);
+  border: none;
+  border-bottom: 2px solid var(--green);
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-family: inherit;
+  padding: 0 0 2px;
+}
+.task-detail-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Status badge */
+.status-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  position: relative;
+}
+.status-badge:hover { opacity: 0.85; }
+.status-badge.not-started { background: var(--gray-100); color: var(--gray-600); }
+.status-badge.in-progress { background: var(--blue-light); color: #1d4ed8; }
+.status-badge.done { background: var(--green-light); color: #166534; }
+.status-badge.skipped { background: var(--amber-light); color: #92400e; }
+
+.status-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--gray-200);
+  z-index: 20;
+  overflow: hidden;
+  min-width: 140px;
+}
+.status-option {
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.1s;
+}
+.status-option:hover { background: var(--gray-50); }
+
+/* DIY/Pro badge */
+.diy-pro-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.diy-pro-badge:hover { opacity: 0.85; }
+.diy-pro-badge.diy { background: var(--green-light); color: #166534; }
+.diy-pro-badge.pro { background: var(--blue-light); color: #1d4ed8; }
+
+/* Meta grid */
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--gray-200);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.meta-item {
+  background: white;
+  padding: 12px;
+}
+.meta-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.meta-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+  display: inline-block;
+  transition: border-color 0.15s;
+}
+.meta-value:hover { border-bottom-color: var(--gray-300); }
+.meta-input {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+  border: none;
+  border-bottom: 2px solid var(--green);
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-family: inherit;
+  padding: 0 0 2px;
+}
+input[type="date"].meta-input {
+  font-family: inherit;
+}
+
+/* Task detail sections */
+.td-section {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.td-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.td-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.td-edit-btn {
+  font-size: 12px;
+  color: var(--green);
+  background: none;
+  border: 1px solid var(--green);
+  border-radius: 6px;
+  padding: 3px 10px;
+  cursor: pointer;
+  font-weight: 500;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.td-edit-btn:hover { background: var(--green-light); }
+
+/* Markdown editor */
+.md-editor textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  background: var(--gray-50);
+  color: var(--gray-700);
+}
+.md-editor textarea:focus { border-color: var(--green); }
+.md-editor-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+.md-editor-actions button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+.md-save {
+  background: var(--green);
+  color: white;
+  border: none;
+}
+.md-cancel {
+  background: white;
+  color: var(--gray-600);
+  border: 1px solid var(--gray-300);
+}
+.md-hint {
+  font-size: 11px;
+  color: var(--gray-400);
+  margin-top: 6px;
+}
+
+/* Description flash on update */
+.td-section.flash {
+  animation: descFlash 1.5s ease;
+}
+@keyframes descFlash {
+  0% { background-color: var(--green-light); }
+  100% { background-color: white; }
+}
+
+/* Materials list */
+.materials-list {
+  list-style: none;
+}
+.materials-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 14px;
+  color: var(--gray-600);
+}
+.materials-item:last-child { border-bottom: none; }
+.materials-remove {
+  background: none;
+  border: none;
+  color: var(--gray-400);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.materials-remove:hover { color: var(--red); }
+.materials-add {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.materials-add input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  background: var(--gray-50);
+}
+.materials-add input:focus { border-color: var(--green); }
+.materials-add button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: var(--green);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* User notes empty state */
+.notes-empty {
+  text-align: center;
+  padding: 16px;
+  color: var(--gray-400);
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px dashed var(--gray-300);
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.notes-empty:hover {
+  background: var(--gray-50);
+  color: var(--gray-500);
+}
+
+/* Dependencies */
+.dep-link {
+  color: var(--green);
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 14px;
+}
+.dep-link:hover { color: #16a34a; }
+
+/* Inline Task Chat */
+.task-chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+.task-chat-msg {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+.task-chat-msg.user {
+  align-self: flex-end;
+  background: var(--green);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+.task-chat-msg.assistant {
+  align-self: flex-start;
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border-bottom-left-radius: 4px;
+}
+.task-chat-typing {
+  align-self: flex-start;
+  padding: 10px 14px;
+  background: var(--gray-100);
+  border-radius: 12px;
+  border-bottom-left-radius: 4px;
+  font-size: 14px;
+  color: var(--gray-400);
+}
+.task-chat-empty {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--gray-400);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.task-chat-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+/* Route transition */
+.page-enter {
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 </style>
 </head>
 <body>
+<div id="app"></div>
 
-<!-- AI Response Toast -->
-<div class="ai-toast" id="aiToast">
-  <div class="ai-toast-inner">
-    <button class="ai-toast-dismiss" onclick="dismissToast()">&times;</button>
-    <div class="ai-toast-response" id="aiResponse"></div>
-    <ul class="ai-toast-changes" id="aiChanges"></ul>
-  </div>
-</div>
-
-<!-- Loading Overlay -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="spinner"></div>
-  <div class="loading-text">Updating your plan...</div>
-</div>
-
-<!-- Task Chat Drawer -->
-<div class="task-chat-overlay" id="taskChatOverlay" onclick="closeTaskChat()"></div>
-<div class="task-chat-drawer" id="taskChatDrawer">
-  <div class="task-chat-header">
-    <div class="task-chat-handle"></div>
-    <div class="task-chat-title" id="taskChatTitle"></div>
-    <button class="task-chat-close" onclick="closeTaskChat()">&times;</button>
-  </div>
-  <div class="task-chat-body" id="taskChatBody">
-    <div class="task-chat-desc" id="taskChatDesc"></div>
-    <div class="task-chat-messages" id="taskChatMessages"></div>
-  </div>
-  <div class="task-chat-input-bar">
-    <div style="display:flex;gap:8px">
-      <input type="text" class="chat-input" id="taskChatInput"
-             placeholder="Ask about this task..." autocomplete="off">
-      <button class="chat-send" id="taskChatSend" onclick="sendTaskChatMessage()">&#9654;</button>
-    </div>
-  </div>
-</div>
-
-<!-- Hero -->
-<div class="hero" id="hero"></div>
-
-<!-- Current Task -->
-<div id="currentTaskContainer"></div>
-
-<!-- Summary Stats -->
-<div class="card" id="statsCard">
-  <div class="card-header" onclick="toggleCard('stats')">
-    Summary <span class="chevron" id="statsChevron">&#9660;</span>
-  </div>
-  <div class="card-body" id="statsBody"></div>
-</div>
-
-<!-- Activity Feed -->
-<div class="card" id="activityCard">
-  <div class="card-header" onclick="toggleCard('activity')">
-    Recent Activity <span class="chevron" id="activityChevron">&#9660;</span>
-  </div>
-  <div class="card-body" id="activityBody"></div>
-</div>
-
-<!-- Version History -->
-<div class="card" id="versionCard">
-  <div class="card-header collapsed" onclick="toggleCard('versions')">
-    Version History <span class="chevron" id="versionsChevron">&#9660;</span>
-  </div>
-  <div class="card-body collapsed" id="versionsBody"></div>
-</div>
-
-<!-- Full Timeline -->
-<div class="card" id="timelineCard">
-  <div class="card-header" onclick="toggleCard('timeline')">
-    Full Plan Timeline <span class="chevron" id="timelineChevron">&#9660;</span>
-  </div>
-  <div class="card-body" id="timelineBody"></div>
-</div>
-
-<!-- Decision Log -->
-<div class="card" id="decisionCard">
-  <div class="card-header collapsed" onclick="toggleCard('decision')">
-    Decision Log <span class="chevron" id="decisionChevron">&#9660;</span>
-  </div>
-  <div class="card-body collapsed" id="decisionBody"></div>
-</div>
-
-<!-- Chat Bar -->
-<div class="chat-bar">
-  <div class="undo-bar" id="undoBar">
-    <button class="undo-btn" onclick="quickUndo()">&#8635; Undo last change</button>
-  </div>
-  <div style="display:flex;gap:8px;flex:1">
-    <input type="text" class="chat-input" id="chatInput" placeholder="Tell me what's happening..." autocomplete="off">
-    <button class="chat-send" id="chatSend" onclick="sendMessage()">&#9654;</button>
-  </div>
-</div>
-
-<script>
+<script type="module">
 // =====================================================
-// CONFIG — Update this base URL after deploying the Worker
+// CDN IMPORTS
+// =====================================================
+import { h, render } from 'https://esm.sh/preact@10';
+import { useState, useEffect, useRef, useCallback } from 'https://esm.sh/preact@10/hooks';
+import htm from 'https://esm.sh/htm@3';
+import { marked } from 'https://esm.sh/marked@12';
+import DOMPurify from 'https://esm.sh/dompurify@3';
+
+const html = htm.bind(h);
+
+// =====================================================
+// CONFIG
 // =====================================================
 const API_BASE = 'https://lawn-plan-api.evan-56b.workers.dev';
 const API_URL = API_BASE + '/api/revise-plan';
@@ -702,9 +928,11 @@ const API_PLAN_URL = API_BASE + '/api/plan';
 const API_VERSIONS_URL = API_BASE + '/api/versions';
 const API_ROLLBACK_URL = API_BASE + '/api/rollback';
 const API_TASK_CHAT_URL = API_BASE + '/api/task-chat';
-const APP_TOKEN = 'lp-2026-fv-bermuda-xK9mP3'; // shared secret — must match Worker's APP_TOKEN
+const APP_TOKEN = 'lp-2026-fv-bermuda-xK9mP3';
 
-// Seed plan data — used on first visit
+// =====================================================
+// SEED PLAN DATA
+// =====================================================
 const SEED_PLAN = {
   lastUpdated: "2026-02-28",
   activityLog: [],
@@ -723,7 +951,8 @@ const SEED_PLAN = {
       dependsOn: [],
       phase: 1,
       weekend: "This Weekend (2/28-3/1)",
-      notes: "Submit to NC State Soil Testing Lab. Results take 2-3 weeks."
+      notes: "Submit to NC State Soil Testing Lab. Results take 2-3 weeks.",
+      userNotes: ""
     },
     {
       id: "spring-cleanup",
@@ -738,8 +967,9 @@ const SEED_PLAN = {
       cost: "~$10",
       dependsOn: [],
       phase: 1,
-      weekend: "This Weekend (2/28-3/1) → finish 3/7-8",
-      notes: "Debris blocks sunlight and slows Bermuda green-up."
+      weekend: "This Weekend (2/28-3/1) \u2192 finish 3/7-8",
+      notes: "Debris blocks sunlight and slows Bermuda green-up.",
+      userNotes: ""
     },
     {
       id: "shopping-trip-1",
@@ -754,8 +984,9 @@ const SEED_PLAN = {
       cost: "$170-315",
       dependsOn: [],
       phase: 1,
-      weekend: "Weekday errand — week of 3/2",
-      notes: "This front-loads materials for weekends 1 and 2."
+      weekend: "Weekday errand \u2014 week of 3/2",
+      notes: "This front-loads materials for weekends 1 and 2.",
+      userNotes: ""
     },
     {
       id: "tree-area",
@@ -771,7 +1002,8 @@ const SEED_PLAN = {
       dependsOn: ["shopping-trip-1"],
       phase: 2,
       weekend: "Weekend 1 (3/7-8)",
-      notes: "Bermuda will spread into this area naturally over summer."
+      notes: "Bermuda will spread into this area naturally over summer.",
+      userNotes: ""
     },
     {
       id: "ewf-playset",
@@ -787,7 +1019,8 @@ const SEED_PLAN = {
       dependsOn: ["shopping-trip-1"],
       phase: 2,
       weekend: "Weekend 2 (3/14-15)",
-      notes: "Biggest DIY day. Pre-drill timbers to avoid splitting."
+      notes: "Biggest DIY day. Pre-drill timbers to avoid splitting.",
+      userNotes: ""
     },
     {
       id: "scalp-mow",
@@ -803,8 +1036,9 @@ const SEED_PLAN = {
       dependsOn: [],
       phase: 2,
       weekend: "Weekend 3 (3/21-22)",
-      notes: "Weather dependent — only do when Bermuda shows green. Can push to 3/28-29 or 4/4-5.",
-      constraints: ["Must coincide with Bermuda green-up", "Soil temp needs to be 65°F+"]
+      notes: "Weather dependent \u2014 only do when Bermuda shows green. Can push to 3/28-29 or 4/4-5.",
+      constraints: ["Must coincide with Bermuda green-up", "Soil temp needs to be 65\u00B0F+"],
+      userNotes: ""
     },
     {
       id: "shopping-trip-2",
@@ -819,8 +1053,9 @@ const SEED_PLAN = {
       cost: "$55-140",
       dependsOn: [],
       phase: 3,
-      weekend: "Weekday errand — week of 3/30",
-      notes: ""
+      weekend: "Weekday errand \u2014 week of 3/30",
+      notes: "",
+      userNotes: ""
     },
     {
       id: "gravel-deck",
@@ -836,11 +1071,12 @@ const SEED_PLAN = {
       dependsOn: ["shopping-trip-2"],
       phase: 3,
       weekend: "Weekend 5 (4/4-5)",
-      notes: "This eliminates the mud problem under the deck permanently."
+      notes: "This eliminates the mud problem under the deck permanently.",
+      userNotes: ""
     },
     {
       id: "call-leapfrog",
-      title: "Call Leapfrog — Quote Aeration + Sod",
+      title: "Call Leapfrog \u2014 Quote Aeration + Sod",
       description: "Call Leapfrog (919-427-3131). Ask for bundled quote on: core aeration (full lawn, focus on compacted backyard) + Bermuda sod installation (irrigation-damaged areas + fire pit zone). Ask about compost top dressing. Ask their opinion on which areas are too shaded for Bermuda. Share photos of bare areas.",
       targetDate: "2026-04-06",
       deadline: "2026-04-17",
@@ -851,8 +1087,9 @@ const SEED_PLAN = {
       cost: "$0",
       dependsOn: [],
       phase: 3,
-      weekend: "Weekday — week of 4/6",
-      notes: "Also ask if they've done a soil test on your property. If so, you may not need the NC State results."
+      weekend: "Weekday \u2014 week of 4/6",
+      notes: "Also ask if they've done a soil test on your property. If so, you may not need the NC State results.",
+      userNotes: ""
     },
     {
       id: "leapfrog-aeration-sod",
@@ -868,7 +1105,8 @@ const SEED_PLAN = {
       dependsOn: ["call-leapfrog"],
       phase: 3,
       weekend: "Scheduled by Leapfrog (late May - June)",
-      notes: "Bundled service. Date set by Leapfrog."
+      notes: "Bundled service. Date set by Leapfrog.",
+      userNotes: ""
     },
     {
       id: "summer-assessment",
@@ -884,7 +1122,8 @@ const SEED_PLAN = {
       dependsOn: ["leapfrog-aeration-sod"],
       phase: 4,
       weekend: "Any weekend in July",
-      notes: "This decides whether we need ground cover for shade areas."
+      notes: "This decides whether we need ground cover for shade areas.",
+      userNotes: ""
     }
   ],
   decisions: [
@@ -897,13 +1136,13 @@ const SEED_PLAN = {
   context: {
     location: "Fuquay-Varina, NC",
     grassType: "Bermuda (warm-season)",
-    leapfrogPlan: "Better Grass Warm — 7 annual treatments (pre/post emergent, fertilizer, compost tea, lime)",
+    leapfrogPlan: "Better Grass Warm \u2014 7 annual treatments (pre/post emergent, fertilizer, compost tea, lime)",
     leapfrogPhone: "919-427-3131",
-    lastTreatment: "2026-01-20 — Pre & Post Emergent Weed Control",
-    nextTreatment: "Late March / early April — pre-emergent + fertilizer + compost tea",
+    lastTreatment: "2026-01-20 \u2014 Pre & Post Emergent Weed Control",
+    nextTreatment: "Late March / early April \u2014 pre-emergent + fertilizer + compost tea",
     constraints: [
-      "Bermuda greens up when soil temp hits 65°F consistently (late March / early April in Fuquay-Varina)",
-      "Pre-emergent kills seed — cannot seed while active (lasts ~3-4 months)",
+      "Bermuda greens up when soil temp hits 65\u00B0F consistently (late March / early April in Fuquay-Varina)",
+      "Pre-emergent kills seed \u2014 cannot seed while active (lasts ~3-4 months)",
       "Sod and plugs are NOT affected by pre-emergent",
       "Bermuda needs 6+ hours direct sun",
       "Max one major project (3+ hours) per weekend",
@@ -913,89 +1152,8 @@ const SEED_PLAN = {
 };
 
 // =====================================================
-// STATE
+// UTILITIES
 // =====================================================
-let plan = null;
-let isLoading = false;
-let versionList = [];
-let lastUndoTimestamp = null; // tracks the most recent pre-revision version for quick undo
-let taskChatTaskId = null;       // ID of the task currently being chatted about
-let taskChatHistory = {};        // { [taskId]: [{ role, content }] } — session-only
-let taskChatLoading = false;
-const collapsedSections = { stats: false, activity: false, timeline: false, decision: true, versions: true };
-
-// =====================================================
-// INIT
-// =====================================================
-async function init() {
-  // Show loading while we fetch plan from the server
-  document.getElementById('loadingOverlay').classList.add('visible');
-  document.querySelector('.loading-text').textContent = 'Loading your plan...';
-
-  try {
-    const res = await fetch(API_PLAN_URL, { headers: { 'X-App-Token': APP_TOKEN } });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.plan) {
-        plan = data.plan;
-      }
-    }
-  } catch (err) {
-    console.warn('Could not load plan from server, checking localStorage fallback:', err);
-    // Fallback to localStorage if Worker is unreachable (e.g. local dev)
-    const stored = localStorage.getItem('lawnPlan');
-    if (stored) {
-      try { plan = JSON.parse(stored); } catch (e) { plan = null; }
-    }
-  }
-
-  // If no plan exists anywhere, seed it
-  if (!plan) {
-    plan = JSON.parse(JSON.stringify(SEED_PLAN));
-    await savePlan();
-  }
-
-  document.getElementById('loadingOverlay').classList.remove('visible');
-  render();
-  fetchVersions(); // load version history in background
-
-  // Enter key sends message
-  document.getElementById('chatInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
-
-  // Enter key sends task chat message
-  document.getElementById('taskChatInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendTaskChatMessage();
-    }
-  });
-
-  // Escape key closes task chat drawer
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && taskChatTaskId) {
-      closeTaskChat();
-    }
-  });
-}
-
-async function savePlan() {
-  // Persist to KV via the Worker
-  try {
-    await fetch(API_PLAN_URL, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-App-Token': APP_TOKEN },
-      body: JSON.stringify({ plan }),
-    });
-  } catch (err) {
-    console.warn('Could not save plan to server:', err);
-  }
-}
-
 function getToday() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -1013,7 +1171,8 @@ function daysUntil(dateStr) {
   return Math.round((target - today) / (1000 * 60 * 60 * 24));
 }
 
-function getNextTask() {
+function getNextTask(plan) {
+  if (!plan) return null;
   return plan.tasks.find(t => t.status === 'not-started' || t.status === 'in-progress');
 }
 
@@ -1026,59 +1185,214 @@ function getStatusIcon(status) {
   }
 }
 
-// =====================================================
-// RENDER
-// =====================================================
-function render() {
-  renderHero();
-  renderCurrentTask();
-  renderStats();
-  renderActivity();
-  renderVersionHistory();
-  renderTimeline();
-  renderDecisions();
+function getStatusLabel(status) {
+  switch (status) {
+    case 'done': return 'Done';
+    case 'skipped': return 'Skipped';
+    case 'in-progress': return 'In Progress';
+    default: return 'Not Started';
+  }
 }
 
-function renderHero() {
-  const hero = document.getElementById('hero');
-  const next = getNextTask();
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return mins + 'm ago';
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return hours + 'h ago';
+  const days = Math.floor(hours / 24);
+  return days + 'd ago';
+}
+
+// =====================================================
+// MARKDOWN
+// =====================================================
+marked.setOptions({ breaks: true, gfm: true });
+
+function renderMd(text) {
+  if (!text) return '';
+  return DOMPurify.sanitize(marked.parse(text));
+}
+
+// =====================================================
+// API FUNCTIONS
+// =====================================================
+async function savePlanToServer(plan) {
+  try {
+    await fetch(API_PLAN_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-App-Token': APP_TOKEN },
+      body: JSON.stringify({ plan }),
+    });
+  } catch (err) {
+    console.warn('Could not save plan to server:', err);
+  }
+}
+
+async function fetchPlanFromServer() {
+  const res = await fetch(API_PLAN_URL, { headers: { 'X-App-Token': APP_TOKEN } });
+  if (res.ok) {
+    const data = await res.json();
+    return data.plan || null;
+  }
+  return null;
+}
+
+async function revisePlanOnServer(message, currentPlan) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-App-Token': APP_TOKEN },
+    body: JSON.stringify({
+      message,
+      currentPlan,
+      activityLog: (currentPlan.activityLog || []).slice(-10),
+      today: getToday(),
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'API error (' + res.status + ')');
+  }
+  return res.json();
+}
+
+async function taskChatOnServer(task, message, chatHistory, planContext) {
+  const res = await fetch(API_TASK_CHAT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-App-Token': APP_TOKEN },
+    body: JSON.stringify({
+      task,
+      message,
+      chatHistory: (chatHistory || []).slice(-10),
+      planContext: planContext || {},
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'API error (' + res.status + ')');
+  }
+  return res.json();
+}
+
+async function fetchVersionsFromServer() {
+  try {
+    const res = await fetch(API_VERSIONS_URL, { headers: { 'X-App-Token': APP_TOKEN } });
+    if (res.ok) {
+      const data = await res.json();
+      return data.versions || [];
+    }
+  } catch (err) {
+    console.warn('Could not fetch versions:', err);
+  }
+  return [];
+}
+
+async function rollbackOnServer(timestamp) {
+  const res = await fetch(API_ROLLBACK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-App-Token': APP_TOKEN },
+    body: JSON.stringify({ timestamp }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Rollback failed (' + res.status + ')');
+  }
+  return res.json();
+}
+
+// =====================================================
+// SHARED COMPONENTS
+// =====================================================
+function MarkdownContent({ text, className }) {
+  if (!text) return null;
+  const sanitized = renderMd(text);
+  return html`<div class=${"markdown-content " + (className || '')} dangerouslySetInnerHTML=${{ __html: sanitized }} />`;
+}
+
+function LoadingOverlay({ visible, text }) {
+  return html`
+    <div class=${"loading-overlay" + (visible ? " visible" : "")}>
+      <div class="spinner" />
+      <div class="loading-text">${text || 'Updating your plan...'}</div>
+    </div>
+  `;
+}
+
+function Toast({ toast, onDismiss }) {
+  if (!toast) return html`<div class="ai-toast" />`;
+  return html`
+    <div class=${"ai-toast" + (toast ? " visible" : "")}>
+      <div class="ai-toast-inner">
+        <button class="ai-toast-dismiss" onClick=${onDismiss}>\u00D7</button>
+        <div class="ai-toast-response">${toast.response}</div>
+        ${toast.changes && toast.changes.length > 0 && html`
+          <ul class="ai-toast-changes">
+            ${toast.changes.map(c => html`<li>${c}</li>`)}
+          </ul>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function CollapsibleCard({ title, collapsed, onToggle, children }) {
+  return html`
+    <div class="card">
+      <div class=${"card-header" + (collapsed ? " collapsed" : "")} onClick=${onToggle}>
+        ${title} <span class="chevron">\u25BC</span>
+      </div>
+      <div class=${"card-body" + (collapsed ? " collapsed" : "")}>
+        ${children}
+      </div>
+    </div>
+  `;
+}
+
+// =====================================================
+// DASHBOARD COMPONENTS
+// =====================================================
+function Hero({ plan }) {
+  const next = getNextTask(plan);
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
   if (!next) {
-    hero.innerHTML = `
-      <div class="hero-date">${today}</div>
-      <div class="hero-next">All caught up!</div>
-      <span class="hero-sub on-track">No pending tasks</span>
+    return html`
+      <div class="hero">
+        <div class="hero-date">${today}</div>
+        <div class="hero-next">All caught up!</div>
+        <span class="hero-sub on-track">No pending tasks</span>
+      </div>
     `;
-    return;
   }
 
   const days = daysUntil(next.targetDate);
   let statusClass, statusText;
   if (days < 0) {
     statusClass = 'overdue';
-    statusText = `Target: ${formatDate(next.targetDate)} — overdue by ${Math.abs(days)} day${Math.abs(days) !== 1 ? 's' : ''}`;
+    statusText = 'Target: ' + formatDate(next.targetDate) + ' \u2014 overdue by ' + Math.abs(days) + ' day' + (Math.abs(days) !== 1 ? 's' : '');
   } else if (days <= 3) {
     statusClass = 'due-soon';
-    statusText = `Target: ${formatDate(next.targetDate)} — ${days === 0 ? 'today' : days === 1 ? 'tomorrow' : days + ' days away'}`;
+    statusText = 'Target: ' + formatDate(next.targetDate) + ' \u2014 ' + (days === 0 ? 'today' : days === 1 ? 'tomorrow' : days + ' days away');
   } else {
     statusClass = 'on-track';
-    statusText = `Target: ${formatDate(next.targetDate)} — ${days} days away`;
+    statusText = 'Target: ' + formatDate(next.targetDate) + ' \u2014 ' + days + ' days away';
   }
 
-  hero.innerHTML = `
-    <div class="hero-date">${today}</div>
-    <div class="hero-next">Next up: ${next.title}</div>
-    <span class="hero-sub ${statusClass}">${statusText}</span>
+  return html`
+    <div class="hero">
+      <div class="hero-date">${today}</div>
+      <div class="hero-next">Next up: ${next.title}</div>
+      <span class=${"hero-sub " + statusClass}>${statusText}</span>
+    </div>
   `;
 }
 
-function renderCurrentTask() {
-  const container = document.getElementById('currentTaskContainer');
-  const next = getNextTask();
+function CurrentTaskCard({ plan, onQuickAction, onNavigate }) {
+  const next = getNextTask(plan);
 
   if (!next) {
-    container.innerHTML = `
+    return html`
       <div class="card">
         <div class="all-done">
           <div class="all-done-icon">\uD83C\uDF89</div>
@@ -1087,7 +1401,6 @@ function renderCurrentTask() {
         </div>
       </div>
     `;
-    return;
   }
 
   const days = daysUntil(next.targetDate);
@@ -1095,49 +1408,37 @@ function renderCurrentTask() {
   if (days < 0) urgencyClass = 'overdue';
   else if (days <= 3) urgencyClass = 'due-soon';
 
-  const materialsHtml = next.materials && next.materials.length > 0
-    ? `<div class="task-materials">
-        <strong>Materials:</strong>
-        <ul>${next.materials.map(m => `<li>${m}</li>`).join('')}</ul>
-      </div>`
-    : '';
-
-  container.innerHTML = `
-    <div class="card current-task ${urgencyClass}">
+  return html`
+    <div class=${"card current-task " + urgencyClass}>
       <div class="card-body">
-        <div class="task-title">${next.title}</div>
+        <div class="task-title" style="cursor:pointer" onClick=${() => onNavigate('#/task/' + next.id)}>${next.title}</div>
         <div class="task-meta">
           <span>${next.estimatedTime}</span>
           <span>${next.cost !== '$0' ? next.cost : 'Free'}</span>
           <span>${next.diyOrPro === 'pro' ? 'Pro' : 'DIY'}</span>
         </div>
-        <div class="task-desc">${next.description}</div>
-        ${materialsHtml}
-        ${next.notes ? `<div class="task-desc" style="font-size:13px;color:var(--gray-500);margin-bottom:16px">${next.notes}</div>` : ''}
-        <button class="btn-chat" onclick="openTaskChat('${next.id}')">💬 Chat about this task</button>
+        <${MarkdownContent} text=${next.description} />
+        ${next.materials && next.materials.length > 0 && html`
+          <div class="task-materials">
+            <strong>Materials:</strong>
+            <ul>${next.materials.map(m => html`<li>${m}</li>`)}</ul>
+          </div>
+        `}
+        ${next.notes && html`<div style="font-size:13px;color:var(--gray-500);margin-bottom:16px">${next.notes}</div>`}
+        <button class="btn-chat" onClick=${() => onNavigate('#/task/' + next.id)}>View task details</button>
         <div class="task-actions">
-          <button class="btn btn-done" onclick="quickAction('done')">Done</button>
-          <button class="btn btn-skip" onclick="quickAction('skip')">Couldn't Do It</button>
+          <button class="btn btn-done" onClick=${() => onQuickAction('done')}>Done</button>
+          <button class="btn btn-skip" onClick=${() => onQuickAction('skip')}>Couldn't Do It</button>
         </div>
       </div>
     </div>
   `;
 }
 
-function renderStats() {
-  const body = document.getElementById('statsBody');
-  if (collapsedSections.stats) {
-    body.classList.add('collapsed');
-    document.getElementById('statsChevron').parentElement.classList.add('collapsed');
-  } else {
-    body.classList.remove('collapsed');
-    document.getElementById('statsChevron').parentElement.classList.remove('collapsed');
-  }
-
+function StatsCard({ plan }) {
   const done = plan.tasks.filter(t => t.status === 'done').length;
   const total = plan.tasks.length;
 
-  // Budget calculation
   let budgetLow = 0, budgetHigh = 0;
   plan.tasks.forEach(t => {
     if (t.status === 'done' || t.status === 'skipped') return;
@@ -1149,11 +1450,10 @@ function renderStats() {
     }
   });
 
-  // Next Leapfrog
   const leapfrogTask = plan.tasks.find(t => t.id === 'call-leapfrog' && t.status !== 'done');
-  const leapfrogText = leapfrogTask ? `${leapfrogTask.title} (${formatDate(leapfrogTask.targetDate)})` : 'All Leapfrog tasks done';
+  const leapfrogText = leapfrogTask ? leapfrogTask.title + ' (' + formatDate(leapfrogTask.targetDate) + ')' : 'All Leapfrog tasks done';
 
-  body.innerHTML = `
+  return html`
     <div class="stats-grid">
       <div class="stat-item">
         <div class="stat-value">${done} / ${total}</div>
@@ -1171,42 +1471,40 @@ function renderStats() {
   `;
 }
 
-function renderActivity() {
-  const body = document.getElementById('activityBody');
-  if (collapsedSections.activity) {
-    body.classList.add('collapsed');
-    document.getElementById('activityChevron').parentElement.classList.add('collapsed');
-  } else {
-    body.classList.remove('collapsed');
-    document.getElementById('activityChevron').parentElement.classList.remove('collapsed');
-  }
-
+function ActivityCard({ plan }) {
   const log = (plan.activityLog || []).filter(e => e && e.userMessage).slice(-10).reverse();
   if (log.length === 0) {
-    body.innerHTML = '<div class="empty-state">No activity yet. Use the chat below to get started!</div>';
-    return;
+    return html`<div class="empty-state">No activity yet. Use the chat below to get started!</div>`;
   }
-
-  body.innerHTML = log.map(entry => `
-    <div class="activity-item">
-      <div class="activity-user">${entry.userMessage}</div>
-      <div class="activity-response">${entry.response}</div>
-      <div class="activity-time">${entry.timestamp ? new Date(entry.timestamp).toLocaleString() : ''}</div>
-    </div>
-  `).join('');
+  return html`
+    ${log.map(entry => html`
+      <div class="activity-item">
+        <div class="activity-user">${entry.userMessage}</div>
+        <div class="activity-response">${entry.response}</div>
+        <div class="activity-time">${entry.timestamp ? new Date(entry.timestamp).toLocaleString() : ''}</div>
+      </div>
+    `)}
+  `;
 }
 
-function renderTimeline() {
-  const body = document.getElementById('timelineBody');
-  if (collapsedSections.timeline) {
-    body.classList.add('collapsed');
-    document.getElementById('timelineChevron').parentElement.classList.add('collapsed');
-  } else {
-    body.classList.remove('collapsed');
-    document.getElementById('timelineChevron').parentElement.classList.remove('collapsed');
+function VersionHistoryCard({ versions, onRestore }) {
+  if (versions.length === 0) {
+    return html`<div class="empty-state">No version history yet. Changes will appear here after your first chat interaction.</div>`;
   }
+  return html`
+    ${versions.slice().reverse().map(v => html`
+      <div class="version-item">
+        <div class="version-info">
+          <div class="version-message">${v.userMessage || 'No message'}</div>
+          <div class="version-meta">${timeAgo(v.timestamp)} \u00B7 ${v.changeCount === 1 ? '1 change' : v.changeCount + ' changes'}${v.source === 'rollback' ? ' (rollback)' : ''}</div>
+        </div>
+        <button class="version-restore" onClick=${() => onRestore(v.timestamp)}>Restore</button>
+      </div>
+    `)}
+  `;
+}
 
-  // Group by weekend field
+function TimelineCard({ plan, onNavigate }) {
   const groups = {};
   plan.tasks.forEach(t => {
     const key = t.weekend || 'Unscheduled';
@@ -1214,428 +1512,776 @@ function renderTimeline() {
     groups[key].push(t);
   });
 
-  let html = '';
-  Object.entries(groups).forEach(([weekend, tasks]) => {
-    html += `<div class="timeline-group-title">${weekend}</div>`;
-    tasks.forEach(t => {
-      const doneClass = t.status === 'done' ? 'done' : '';
-      html += `
-        <div class="timeline-task ${doneClass}" onclick="toggleTimelineTask(this)">
-          <div class="timeline-task-header">
-            <span class="timeline-task-status">${getStatusIcon(t.status)}</span>
-            <span class="timeline-task-name">${t.title}</span>
-            <span class="timeline-task-chat-btn" onclick="event.stopPropagation(); openTaskChat('${t.id}')" title="Chat about this task">💬</span>
-            <span class="timeline-task-date">${formatDate(t.targetDate)}</span>
-          </div>
-          <div class="timeline-task-details">
-            <p>${t.description}</p>
-            ${t.notes ? `<p style="margin-top:6px;color:var(--gray-500)">${t.notes}</p>` : ''}
-            ${t.materials && t.materials.length ? `<p style="margin-top:6px"><strong>Materials:</strong> ${t.materials.join(', ')}</p>` : ''}
-            <p style="margin-top:6px;color:var(--gray-400)">Est: ${t.estimatedTime} · Cost: ${t.cost} · ${t.diyOrPro === 'pro' ? 'Pro' : 'DIY'}</p>
-          </div>
-        </div>
-      `;
-    });
-  });
+  const [expanded, setExpanded] = useState({});
+  const toggle = (id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
 
-  body.innerHTML = html;
+  return html`
+    ${Object.entries(groups).map(([weekend, tasks]) => html`
+      <div key=${weekend}>
+        <div class="timeline-group-title">${weekend}</div>
+        ${tasks.map(t => html`
+          <div class=${"timeline-task" + (t.status === 'done' ? " done" : "") + (expanded[t.id] ? " expanded" : "")} key=${t.id}>
+            <div class="timeline-task-header" onClick=${() => toggle(t.id)}>
+              <span class="timeline-task-status">${getStatusIcon(t.status)}</span>
+              <span class="timeline-task-name" onClick=${(e) => { e.stopPropagation(); onNavigate('#/task/' + t.id); }}>${t.title}</span>
+              <span class="timeline-task-date">${formatDate(t.targetDate)}</span>
+            </div>
+            <div class="timeline-task-details">
+              <${MarkdownContent} text=${t.description} />
+              ${t.notes && html`<p style="margin-top:6px;color:var(--gray-500)">${t.notes}</p>`}
+              ${t.materials && t.materials.length > 0 && html`<p style="margin-top:6px"><strong>Materials:</strong> ${t.materials.join(', ')}</p>`}
+              <p style="margin-top:6px;color:var(--gray-400)">Est: ${t.estimatedTime} \u00B7 Cost: ${t.cost} \u00B7 ${t.diyOrPro === 'pro' ? 'Pro' : 'DIY'}</p>
+            </div>
+          </div>
+        `)}
+      </div>
+    `)}
+  `;
 }
 
-function renderDecisions() {
-  const body = document.getElementById('decisionBody');
-  if (collapsedSections.decision) {
-    body.classList.add('collapsed');
-    document.getElementById('decisionChevron').parentElement.classList.add('collapsed');
-  } else {
-    body.classList.remove('collapsed');
-    document.getElementById('decisionChevron').parentElement.classList.remove('collapsed');
-  }
+function DecisionCard({ plan }) {
+  return html`
+    ${(plan.decisions || []).map(d => html`
+      <div class="decision-item">
+        <div class="decision-text">${d.decision}</div>
+        ${d.notes && html`<div class="decision-notes">${d.notes}</div>`}
+        <div class="decision-date">${formatDate(d.date)}</div>
+      </div>
+    `)}
+  `;
+}
 
-  body.innerHTML = (plan.decisions || []).map(d => `
-    <div class="decision-item">
-      <div class="decision-text">${d.decision}</div>
-      ${d.notes ? `<div class="decision-notes">${d.notes}</div>` : ''}
-      <div class="decision-date">${formatDate(d.date)}</div>
+function ChatBar({ onSend, disabled, placeholder, showUndo, onUndo, inputRef, inputValue, onInputChange }) {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      onSend();
+    }
+  };
+
+  return html`
+    <div class="chat-bar">
+      ${showUndo && html`
+        <div class="undo-bar visible">
+          <button class="undo-btn" onClick=${onUndo}>\u21BB Undo last change</button>
+        </div>
+      `}
+      <div style="display:flex;gap:8px;flex:1">
+        <input type="text" class="chat-input" ref=${inputRef}
+               placeholder=${placeholder || "Tell me what's happening..."}
+               autocomplete="off" disabled=${disabled}
+               value=${inputValue} onInput=${e => onInputChange(e.target.value)}
+               onKeyDown=${handleKeyDown} />
+        <button class="chat-send" disabled=${disabled} onClick=${onSend}>\u25B6</button>
+      </div>
     </div>
-  `).join('');
+  `;
+}
+
+function Dashboard({ plan, isLoading, versions, toast, collapsed, lastUndoTimestamp,
+                      onSendMessage, onQuickAction, onToggleCard, onRestoreVersion,
+                      onQuickUndo, onDismissToast, onNavigate,
+                      chatInputRef, chatInputValue, onChatInputChange }) {
+  return html`
+    <div class="page-enter">
+      <${Hero} plan=${plan} />
+      <${CurrentTaskCard} plan=${plan} onQuickAction=${onQuickAction} onNavigate=${onNavigate} />
+
+      <${CollapsibleCard} title="Summary" collapsed=${collapsed.stats} onToggle=${() => onToggleCard('stats')}>
+        <${StatsCard} plan=${plan} />
+      <//>
+
+      <${CollapsibleCard} title="Recent Activity" collapsed=${collapsed.activity} onToggle=${() => onToggleCard('activity')}>
+        <${ActivityCard} plan=${plan} />
+      <//>
+
+      <${CollapsibleCard} title="Version History" collapsed=${collapsed.versions} onToggle=${() => onToggleCard('versions')}>
+        <${VersionHistoryCard} versions=${versions} onRestore=${onRestoreVersion} />
+      <//>
+
+      <${CollapsibleCard} title="Full Plan Timeline" collapsed=${collapsed.timeline} onToggle=${() => onToggleCard('timeline')}>
+        <${TimelineCard} plan=${plan} onNavigate=${onNavigate} />
+      <//>
+
+      <${CollapsibleCard} title="Decision Log" collapsed=${collapsed.decision} onToggle=${() => onToggleCard('decision')}>
+        <${DecisionCard} plan=${plan} />
+      <//>
+
+      <${ChatBar}
+        onSend=${onSendMessage}
+        disabled=${isLoading}
+        showUndo=${!!lastUndoTimestamp}
+        onUndo=${onQuickUndo}
+        inputRef=${chatInputRef}
+        inputValue=${chatInputValue}
+        onInputChange=${onChatInputChange}
+      />
+    </div>
+  `;
 }
 
 // =====================================================
-// INTERACTIONS
+// TASK DETAIL COMPONENTS
 // =====================================================
-function toggleCard(name) {
-  collapsedSections[name] = !collapsedSections[name];
-  render();
-}
+function StatusBadge({ status, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
 
-function toggleTimelineTask(el) {
-  el.classList.toggle('expanded');
-}
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [open]);
 
-function quickAction(type) {
-  const next = getNextTask();
-  if (!next) return;
-  const input = document.getElementById('chatInput');
-  if (type === 'done') {
-    input.value = `Finished "${next.title}"`;
-  } else {
-    input.value = `Couldn't do "${next.title}" — `;
-    input.focus();
-    return; // Let user type a reason
-  }
-  sendMessage();
-}
+  const options = ['not-started', 'in-progress', 'done', 'skipped'];
 
-function dismissToast() {
-  document.getElementById('aiToast').classList.remove('visible');
-}
-
-async function sendMessage() {
-  const input = document.getElementById('chatInput');
-  const message = input.value.trim();
-  if (!message || isLoading) return;
-
-  input.value = '';
-  isLoading = true;
-  document.getElementById('loadingOverlay').classList.add('visible');
-  document.getElementById('chatSend').disabled = true;
-  dismissToast();
-
-  try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-App-Token': APP_TOKEN },
-      body: JSON.stringify({
-        message,
-        currentPlan: plan,
-        activityLog: (plan.activityLog || []).slice(-10),
-        today: getToday(),
-      }),
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || `API error (${response.status})`);
-    }
-
-    const data = await response.json();
-
-    // Update plan with revised version
-    if (data.revisedPlan) {
-      // Use our local activity log as the source of truth (Claude is told not to
-      // modify it, but we overwrite just in case to prevent duplicates)
-      const currentLog = (plan.activityLog || []).slice();
-      const logEntry = {
-        timestamp: new Date().toISOString(),
-        userMessage: message,
-        response: data.response || '',
-        changes: data.changes || [],
-      };
-      currentLog.push(logEntry);
-      data.revisedPlan.activityLog = currentLog;
-      data.revisedPlan.lastUpdated = getToday();
-      plan = data.revisedPlan;
-      // The Worker already saved the revised plan to KV, but we need to
-      // persist the activity log entry the client just appended
-      await savePlan();
-    }
-
-    // Show response toast
-    document.getElementById('aiResponse').textContent = data.response || 'Plan updated.';
-    const changesEl = document.getElementById('aiChanges');
-    changesEl.innerHTML = (data.changes || []).map(c => `<li>${c}</li>`).join('');
-    document.getElementById('aiToast').classList.add('visible');
-
-    // Refresh version list and show quick undo button
-    await fetchVersions();
-    if (versionList.length > 0) {
-      lastUndoTimestamp = versionList[versionList.length - 1].timestamp;
-      document.getElementById('undoBar').classList.add('visible');
-    }
-
-    render();
-  } catch (err) {
-    alert('Error: ' + err.message);
-  } finally {
-    isLoading = false;
-    document.getElementById('loadingOverlay').classList.remove('visible');
-    document.getElementById('chatSend').disabled = false;
-  }
-}
-
-// =====================================================
-// VERSION HISTORY
-// =====================================================
-async function fetchVersions() {
-  try {
-    const res = await fetch(API_VERSIONS_URL, { headers: { 'X-App-Token': APP_TOKEN } });
-    if (res.ok) {
-      const data = await res.json();
-      versionList = data.versions || [];
-      renderVersionHistory();
-    }
-  } catch (err) {
-    console.warn('Could not fetch versions:', err);
-  }
-}
-
-function renderVersionHistory() {
-  const body = document.getElementById('versionsBody');
-  if (collapsedSections.versions) {
-    body.classList.add('collapsed');
-    document.getElementById('versionsChevron').parentElement.classList.add('collapsed');
-  } else {
-    body.classList.remove('collapsed');
-    document.getElementById('versionsChevron').parentElement.classList.remove('collapsed');
-  }
-
-  if (versionList.length === 0) {
-    body.innerHTML = '<div class="empty-state">No version history yet. Changes will appear here after your first chat interaction.</div>';
-    return;
-  }
-
-  body.innerHTML = versionList.slice().reverse().map(v => {
-    const ago = timeAgo(v.timestamp);
-    const changes = v.changeCount === 1 ? '1 change' : `${v.changeCount} changes`;
-    const source = v.source === 'rollback' ? ' (rollback)' : '';
-    return `
-      <div class="version-item">
-        <div class="version-info">
-          <div class="version-message">${escapeHtml(v.userMessage || 'No message')}</div>
-          <div class="version-meta">${ago} · ${changes}${source}</div>
+  return html`
+    <div style="position:relative;display:inline-block" ref=${ref}>
+      <span class=${"status-badge " + status} onClick=${(e) => { e.stopPropagation(); setOpen(!open); }}>
+        ${getStatusIcon(status)} ${getStatusLabel(status)}
+      </span>
+      ${open && html`
+        <div class="status-dropdown">
+          ${options.map(opt => html`
+            <div class="status-option" key=${opt} onClick=${() => { onChange(opt); setOpen(false); }}>
+              ${getStatusIcon(opt)} ${getStatusLabel(opt)}
+            </div>
+          `)}
         </div>
-        <button class="version-restore" onclick="restoreVersion(${v.timestamp})">Restore</button>
+      `}
+    </div>
+  `;
+}
+
+function DiyProBadge({ value, onChange }) {
+  return html`
+    <span class=${"diy-pro-badge " + value} onClick=${() => onChange(value === 'diy' ? 'pro' : 'diy')}>
+      ${value === 'pro' ? 'Pro' : 'DIY'}
+    </span>
+  `;
+}
+
+function MetaItem({ label, value, type, onChange }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const inputRef = useRef(null);
+
+  useEffect(() => { if (editing && inputRef.current) inputRef.current.focus(); }, [editing]);
+
+  const save = () => {
+    if (draft !== value) onChange(draft);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return html`
+      <div class="meta-item">
+        <div class="meta-label">${label}</div>
+        <input type=${type === 'date' ? 'date' : 'text'} class="meta-input"
+               ref=${inputRef} value=${draft}
+               onInput=${e => setDraft(e.target.value)}
+               onBlur=${save}
+               onKeyDown=${e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false); }} />
       </div>
     `;
-  }).join('');
-}
-
-function timeAgo(ts) {
-  const diff = Date.now() - ts;
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-async function restoreVersion(timestamp) {
-  if (!confirm('Restore plan from this snapshot? Your current plan will be saved as a version first.')) return;
-
-  isLoading = true;
-  document.getElementById('loadingOverlay').classList.add('visible');
-  document.querySelector('.loading-text').textContent = 'Restoring plan...';
-
-  try {
-    const res = await fetch(API_ROLLBACK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-App-Token': APP_TOKEN },
-      body: JSON.stringify({ timestamp }),
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || `Rollback failed (${res.status})`);
-    }
-
-    const data = await res.json();
-    if (data.plan) {
-      // Preserve local activity log on restore
-      data.plan.activityLog = plan.activityLog || [];
-      plan = data.plan;
-      await savePlan();
-    }
-
-    // Hide undo bar since we just did a restore
-    lastUndoTimestamp = null;
-    document.getElementById('undoBar').classList.remove('visible');
-
-    render();
-    await fetchVersions(); // refresh the version list
-
-    // Show success toast
-    document.getElementById('aiResponse').textContent = 'Plan restored successfully.';
-    document.getElementById('aiChanges').innerHTML = '';
-    document.getElementById('aiToast').classList.add('visible');
-  } catch (err) {
-    alert('Restore failed: ' + err.message);
-  } finally {
-    isLoading = false;
-    document.getElementById('loadingOverlay').classList.remove('visible');
   }
+
+  return html`
+    <div class="meta-item">
+      <div class="meta-label">${label}</div>
+      <div class="meta-value" onClick=${() => { setDraft(value); setEditing(true); }}>
+        ${type === 'date' ? formatDate(value) : value || '\u2014'}
+      </div>
+    </div>
+  `;
 }
 
-async function quickUndo() {
-  if (!lastUndoTimestamp) return;
-  await restoreVersion(lastUndoTimestamp);
+function EditableMarkdown({ value, onChange, label, placeholder, emptyText }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value || '');
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    if (editing && textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [editing]);
+
+  const save = () => {
+    onChange(draft);
+    setEditing(false);
+  };
+
+  const cancel = () => {
+    setDraft(value || '');
+    setEditing(false);
+  };
+
+  const handleInput = (e) => {
+    setDraft(e.target.value);
+    e.target.style.height = 'auto';
+    e.target.style.height = e.target.scrollHeight + 'px';
+  };
+
+  const handleKeyDown = (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      save();
+    }
+    if (e.key === 'Escape') cancel();
+  };
+
+  if (editing) {
+    return html`
+      <div class="td-section">
+        <div class="td-section-header">
+          <div class="td-section-title">${label}</div>
+        </div>
+        <div class="md-editor">
+          <textarea ref=${textareaRef} value=${draft}
+                    onInput=${handleInput} onKeyDown=${handleKeyDown}
+                    placeholder=${placeholder || 'Write markdown here...'} />
+          <div class="md-hint">Markdown supported. Cmd+Enter to save, Escape to cancel.</div>
+          <div class="md-editor-actions">
+            <button class="md-cancel" onClick=${cancel}>Cancel</button>
+            <button class="md-save" onClick=${save}>Save</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  const hasContent = value && value.trim();
+
+  return html`
+    <div class="td-section">
+      <div class="td-section-header">
+        <div class="td-section-title">${label}</div>
+        <button class="td-edit-btn" onClick=${() => { setDraft(value || ''); setEditing(true); }}>
+          ${hasContent ? 'Edit' : 'Add'}
+        </button>
+      </div>
+      ${hasContent
+        ? html`<${MarkdownContent} text=${value} />`
+        : html`<div class="notes-empty" onClick=${() => { setDraft(''); setEditing(true); }}>${emptyText || 'Click to add...'}</div>`
+      }
+    </div>
+  `;
+}
+
+function MaterialsList({ materials, onChange }) {
+  const [newItem, setNewItem] = useState('');
+  const inputRef = useRef(null);
+
+  const addItem = () => {
+    const item = newItem.trim();
+    if (!item) return;
+    onChange([...(materials || []), item]);
+    setNewItem('');
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
+  const removeItem = (idx) => {
+    const updated = [...materials];
+    updated.splice(idx, 1);
+    onChange(updated);
+  };
+
+  return html`
+    <div class="td-section">
+      <div class="td-section-header">
+        <div class="td-section-title">Materials</div>
+      </div>
+      ${materials && materials.length > 0 ? html`
+        <ul class="materials-list">
+          ${materials.map((m, i) => html`
+            <li class="materials-item" key=${i}>
+              <button class="materials-remove" onClick=${() => removeItem(i)}>\u00D7</button>
+              <span>${m}</span>
+            </li>
+          `)}
+        </ul>
+      ` : html`<div style="font-size:13px;color:var(--gray-400);margin-bottom:8px">No materials needed</div>`}
+      <div class="materials-add">
+        <input ref=${inputRef} value=${newItem} onInput=${e => setNewItem(e.target.value)}
+               placeholder="Add material..."
+               onKeyDown=${e => { if (e.key === 'Enter') addItem(); }} />
+        <button onClick=${addItem}>Add</button>
+      </div>
+    </div>
+  `;
+}
+
+function TaskChatSection({ taskId, plan, chatHistory, onSendChat }) {
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const messagesRef = useRef(null);
+  const history = chatHistory[taskId] || [];
+
+  useEffect(() => {
+    if (messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+    }
+  }, [history.length, loading]);
+
+  const send = async () => {
+    const msg = input.trim();
+    if (!msg || loading) return;
+    setInput('');
+    setLoading(true);
+    await onSendChat(taskId, msg);
+    setLoading(false);
+  };
+
+  return html`
+    <div class="td-section">
+      <div class="td-section-header">
+        <div class="td-section-title">Chat about this task</div>
+      </div>
+      <div class="task-chat-messages" ref=${messagesRef}>
+        ${history.length === 0 && !loading && html`
+          <div class="task-chat-empty">Ask a question about this task or request changes to the description.</div>
+        `}
+        ${history.map((msg, i) => html`
+          <div class=${"task-chat-msg " + msg.role} key=${i}>${msg.content}</div>
+        `)}
+        ${loading && html`<div class="task-chat-typing">Thinking...</div>`}
+      </div>
+      <div class="task-chat-input-row">
+        <input type="text" class="chat-input" value=${input}
+               onInput=${e => setInput(e.target.value)}
+               placeholder="Ask about this task..."
+               disabled=${loading}
+               onKeyDown=${e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} />
+        <button class="chat-send" disabled=${loading} onClick=${send}>\u25B6</button>
+      </div>
+    </div>
+  `;
+}
+
+function TaskDetail({ taskId, plan, chatHistory, onUpdateTask, onSendTaskChat, onNavigate }) {
+  const task = plan.tasks.find(t => t.id === taskId);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState('');
+  const [descFlash, setDescFlash] = useState(false);
+  const titleRef = useRef(null);
+
+  useEffect(() => { if (editingTitle && titleRef.current) titleRef.current.focus(); }, [editingTitle]);
+
+  // Handle Escape key to go back
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape' && !editingTitle) onNavigate('#/'); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [editingTitle]);
+
+  if (!task) {
+    return html`
+      <div class="task-detail-page page-enter">
+        <button class="task-detail-back" onClick=${() => onNavigate('#/')}>\u2190 Back</button>
+        <div class="empty-state">Task not found.</div>
+      </div>
+    `;
+  }
+
+  const saveTitle = () => {
+    if (titleDraft.trim() && titleDraft !== task.title) {
+      onUpdateTask(taskId, { title: titleDraft.trim() });
+    }
+    setEditingTitle(false);
+  };
+
+  const handleSendChat = async (tid, msg) => {
+    const result = await onSendTaskChat(tid, msg);
+    if (result && result.descriptionChanged) {
+      setDescFlash(true);
+      setTimeout(() => setDescFlash(false), 1500);
+    }
+  };
+
+  const deps = (task.dependsOn || []).map(depId => plan.tasks.find(t => t.id === depId)).filter(Boolean);
+
+  return html`
+    <div class="task-detail-page page-enter">
+      <button class="task-detail-back" onClick=${() => onNavigate('#/')}>\u2190 Back to dashboard</button>
+
+      <div class="task-detail-header">
+        <div class="task-detail-title">
+          ${editingTitle
+            ? html`<input ref=${titleRef} value=${titleDraft}
+                          onInput=${e => setTitleDraft(e.target.value)}
+                          onBlur=${saveTitle}
+                          onKeyDown=${e => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') setEditingTitle(false); }} />`
+            : html`<span class="task-detail-title-text" onClick=${() => { setTitleDraft(task.title); setEditingTitle(true); }}>${task.title}</span>`
+          }
+        </div>
+        <div class="task-detail-badges">
+          <${StatusBadge} status=${task.status} onChange=${(s) => onUpdateTask(taskId, { status: s })} />
+          <${DiyProBadge} value=${task.diyOrPro} onChange=${(v) => onUpdateTask(taskId, { diyOrPro: v })} />
+        </div>
+      </div>
+
+      <div class="meta-grid">
+        <${MetaItem} label="Target Date" value=${task.targetDate} type="date"
+                      onChange=${v => onUpdateTask(taskId, { targetDate: v })} />
+        <${MetaItem} label="Deadline" value=${task.deadline} type="date"
+                      onChange=${v => onUpdateTask(taskId, { deadline: v })} />
+        <${MetaItem} label="Estimated Time" value=${task.estimatedTime}
+                      onChange=${v => onUpdateTask(taskId, { estimatedTime: v })} />
+        <${MetaItem} label="Cost" value=${task.cost}
+                      onChange=${v => onUpdateTask(taskId, { cost: v })} />
+      </div>
+
+      <div class=${"td-section" + (descFlash ? " flash" : "")}>
+        <div class="td-section-header">
+          <div class="td-section-title">Description</div>
+        </div>
+        <${MarkdownContent} text=${task.description} />
+        ${task.notes && html`
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--gray-100)">
+            <div style="font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">AI Notes</div>
+            <div style="font-size:13px;color:var(--gray-500)">${task.notes}</div>
+          </div>
+        `}
+      </div>
+
+      <${MaterialsList} materials=${task.materials || []}
+                         onChange=${(m) => onUpdateTask(taskId, { materials: m })} />
+
+      <${EditableMarkdown}
+        label="My Notes"
+        value=${task.userNotes || ''}
+        onChange=${(v) => onUpdateTask(taskId, { userNotes: v })}
+        placeholder="Write your personal notes, reminders, or observations..."
+        emptyText="Add your personal notes, reminders, or observations about this task..."
+      />
+
+      ${deps.length > 0 && html`
+        <div class="td-section">
+          <div class="td-section-header">
+            <div class="td-section-title">Dependencies</div>
+          </div>
+          <div>
+            ${deps.map(d => html`
+              <span key=${d.id}>
+                <span class="dep-link" onClick=${() => onNavigate('#/task/' + d.id)}>
+                  ${getStatusIcon(d.status)} ${d.title}
+                </span>
+                ${' '}
+              </span>
+            `)}
+          </div>
+        </div>
+      `}
+
+      <${TaskChatSection}
+        taskId=${taskId}
+        plan=${plan}
+        chatHistory=${chatHistory}
+        onSendChat=${handleSendChat}
+      />
+    </div>
+  `;
 }
 
 // =====================================================
-// TASK CHAT DRAWER
+// APP (ROUTER + STATE)
 // =====================================================
-function openTaskChat(taskId) {
-  const task = plan.tasks.find(t => t.id === taskId);
-  if (!task) return;
+function App() {
+  const [plan, setPlan] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingText, setLoadingText] = useState('Loading your plan...');
+  const [toast, setToast] = useState(null);
+  const [versions, setVersions] = useState([]);
+  const [lastUndoTimestamp, setLastUndoTimestamp] = useState(null);
+  const [taskChatHistory, setTaskChatHistory] = useState({});
+  const [collapsed, setCollapsed] = useState({
+    stats: false, activity: false, timeline: false, decision: true, versions: true
+  });
+  const [route, setRoute] = useState(location.hash || '#/');
+  const [chatInputValue, setChatInputValue] = useState('');
 
-  taskChatTaskId = taskId;
+  const planRef = useRef(null);
+  const chatInputRef = useRef(null);
+  const saveTimerRef = useRef(null);
 
-  // Populate header and description
-  document.getElementById('taskChatTitle').textContent = task.title;
-  renderTaskChatDesc(task);
-  renderTaskChatMessages(taskId);
+  // Keep planRef in sync
+  useEffect(() => { planRef.current = plan; }, [plan]);
 
-  // Show drawer
-  document.getElementById('taskChatOverlay').classList.add('visible');
-  document.getElementById('taskChatDrawer').classList.add('visible');
+  // Hash router
+  useEffect(() => {
+    const handler = () => setRoute(location.hash || '#/');
+    window.addEventListener('hashchange', handler);
+    return () => window.removeEventListener('hashchange', handler);
+  }, []);
 
-  // Focus input after animation
-  setTimeout(() => document.getElementById('taskChatInput').focus(), 350);
+  const navigate = useCallback((hash) => {
+    location.hash = hash;
+  }, []);
 
-  // Hide the main chat bar while drawer is open
-  document.querySelector('.chat-bar').style.display = 'none';
-}
+  // Init: load plan
+  useEffect(() => {
+    async function loadPlan() {
+      let loadedPlan = null;
+      try {
+        loadedPlan = await fetchPlanFromServer();
+      } catch (err) {
+        console.warn('Could not load plan from server:', err);
+        const stored = localStorage.getItem('lawnPlan');
+        if (stored) try { loadedPlan = JSON.parse(stored); } catch (e) {}
+      }
 
-function closeTaskChat() {
-  document.getElementById('taskChatOverlay').classList.remove('visible');
-  document.getElementById('taskChatDrawer').classList.remove('visible');
-  taskChatTaskId = null;
+      if (!loadedPlan) {
+        loadedPlan = JSON.parse(JSON.stringify(SEED_PLAN));
+        await savePlanToServer(loadedPlan);
+      }
 
-  // Restore main chat bar
-  document.querySelector('.chat-bar').style.display = '';
+      setPlan(loadedPlan);
+      setIsLoading(false);
 
-  // Re-render to reflect any description changes
-  render();
-}
+      const vs = await fetchVersionsFromServer();
+      setVersions(vs);
+    }
+    loadPlan();
+  }, []);
 
-function renderTaskChatDesc(task) {
-  const desc = document.getElementById('taskChatDesc');
-  let html = `<p>${escapeHtml(task.description)}</p>`;
-  if (task.notes) {
-    html += `<p style="margin-top:8px;color:var(--gray-500);font-size:13px">${escapeHtml(task.notes)}</p>`;
-  }
-  if (task.materials && task.materials.length) {
-    html += `<p style="margin-top:8px;font-size:13px"><strong>Materials:</strong> ${task.materials.map(m => escapeHtml(m)).join(', ')}</p>`;
-  }
-  desc.innerHTML = html;
-}
+  // Debounced save for task edits
+  const debouncedSave = useCallback(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      if (planRef.current) savePlanToServer(planRef.current);
+    }, 500);
+  }, []);
 
-function renderTaskChatMessages(taskId) {
-  const container = document.getElementById('taskChatMessages');
-  const history = taskChatHistory[taskId] || [];
+  // Toggle collapsed cards
+  const toggleCard = useCallback((name) => {
+    setCollapsed(prev => ({ ...prev, [name]: !prev[name] }));
+  }, []);
 
-  if (history.length === 0) {
-    container.innerHTML = '<div class="task-chat-empty">Ask a question about this task or request changes to the description.</div>';
-    return;
-  }
+  // Dismiss toast
+  const dismissToast = useCallback(() => setToast(null), []);
 
-  container.innerHTML = history.map(msg =>
-    `<div class="task-chat-msg ${msg.role}">${escapeHtml(msg.content)}</div>`
-  ).join('');
+  // Update a task field (for inline editing)
+  const updateTask = useCallback((taskId, updates) => {
+    setPlan(prev => {
+      if (!prev) return prev;
+      const idx = prev.tasks.findIndex(t => t.id === taskId);
+      if (idx === -1) return prev;
+      const newTasks = [...prev.tasks];
+      newTasks[idx] = { ...newTasks[idx], ...updates };
+      return { ...prev, tasks: newTasks, lastUpdated: getToday() };
+    });
+    debouncedSave();
+  }, [debouncedSave]);
 
-  // Auto-scroll to bottom
-  const body = document.getElementById('taskChatBody');
-  body.scrollTop = body.scrollHeight;
-}
+  // Quick action (done/skip)
+  const quickAction = useCallback((type) => {
+    if (!planRef.current) return;
+    const next = getNextTask(planRef.current);
+    if (!next) return;
+    if (type === 'done') {
+      setChatInputValue('Finished "' + next.title + '"');
+      // Auto-send after a tick to let state update
+      setTimeout(() => {
+        sendMessage('Finished "' + next.title + '"');
+        setChatInputValue('');
+      }, 0);
+    } else {
+      setChatInputValue('Couldn\'t do "' + next.title + '" \u2014 ');
+      setTimeout(() => chatInputRef.current?.focus(), 0);
+    }
+  }, []);
 
-async function sendTaskChatMessage() {
-  const input = document.getElementById('taskChatInput');
-  const message = input.value.trim();
-  if (!message || taskChatLoading || !taskChatTaskId) return;
+  // Send main chat message
+  const sendMessage = useCallback(async (overrideMsg) => {
+    const message = overrideMsg || chatInputRef.current?.value?.trim() || chatInputValue.trim();
+    if (!message || !planRef.current) return;
 
-  const taskId = taskChatTaskId;
-  const task = plan.tasks.find(t => t.id === taskId);
-  if (!task) return;
+    setChatInputValue('');
+    setIsLoading(true);
+    setLoadingText('Updating your plan...');
+    setToast(null);
 
-  // Initialize history for this task if needed
-  if (!taskChatHistory[taskId]) taskChatHistory[taskId] = [];
+    try {
+      const data = await revisePlanOnServer(message, planRef.current);
 
-  // Add user message to history and render
-  taskChatHistory[taskId].push({ role: 'user', content: message });
-  renderTaskChatMessages(taskId);
+      if (data.revisedPlan) {
+        // Preserve userNotes from current plan (client-side safety)
+        if (planRef.current.tasks) {
+          for (const task of data.revisedPlan.tasks) {
+            const original = planRef.current.tasks.find(t => t.id === task.id);
+            if (original && original.userNotes !== undefined) {
+              task.userNotes = original.userNotes;
+            }
+          }
+        }
 
-  input.value = '';
-  taskChatLoading = true;
-  document.getElementById('taskChatSend').disabled = true;
+        const currentLog = (planRef.current.activityLog || []).slice();
+        currentLog.push({
+          timestamp: new Date().toISOString(),
+          userMessage: message,
+          response: data.response || '',
+          changes: data.changes || [],
+        });
+        data.revisedPlan.activityLog = currentLog;
+        data.revisedPlan.lastUpdated = getToday();
+        setPlan(data.revisedPlan);
+        await savePlanToServer(data.revisedPlan);
+      }
 
-  // Show typing indicator
-  const messagesEl = document.getElementById('taskChatMessages');
-  const typingEl = document.createElement('div');
-  typingEl.className = 'task-chat-typing';
-  typingEl.textContent = 'Thinking...';
-  messagesEl.appendChild(typingEl);
-  document.getElementById('taskChatBody').scrollTop =
-    document.getElementById('taskChatBody').scrollHeight;
+      setToast({ response: data.response || 'Plan updated.', changes: data.changes || [] });
 
-  try {
-    const response = await fetch(API_TASK_CHAT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-App-Token': APP_TOKEN },
-      body: JSON.stringify({
-        task: task,
-        message: message,
-        chatHistory: taskChatHistory[taskId].slice(0, -1), // exclude current msg
-        planContext: plan.context || {},
-      }),
+      const vs = await fetchVersionsFromServer();
+      setVersions(vs);
+      if (vs.length > 0) {
+        setLastUndoTimestamp(vs[vs.length - 1].timestamp);
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [chatInputValue]);
+
+  // Send main chat from bar
+  const handleSendMessage = useCallback(() => {
+    sendMessage();
+  }, [sendMessage]);
+
+  // Restore version
+  const restoreVersion = useCallback(async (timestamp) => {
+    if (!confirm('Restore plan from this snapshot? Your current plan will be saved as a version first.')) return;
+
+    setIsLoading(true);
+    setLoadingText('Restoring plan...');
+
+    try {
+      const data = await rollbackOnServer(timestamp);
+      if (data.plan) {
+        data.plan.activityLog = planRef.current?.activityLog || [];
+        setPlan(data.plan);
+        await savePlanToServer(data.plan);
+      }
+
+      setLastUndoTimestamp(null);
+      const vs = await fetchVersionsFromServer();
+      setVersions(vs);
+      setToast({ response: 'Plan restored successfully.', changes: [] });
+    } catch (err) {
+      alert('Restore failed: ' + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Quick undo
+  const quickUndo = useCallback(() => {
+    if (lastUndoTimestamp) restoreVersion(lastUndoTimestamp);
+  }, [lastUndoTimestamp, restoreVersion]);
+
+  // Send task chat message
+  const sendTaskChat = useCallback(async (taskId, message) => {
+    if (!planRef.current) return null;
+    const task = planRef.current.tasks.find(t => t.id === taskId);
+    if (!task) return null;
+
+    // Add user message to history
+    setTaskChatHistory(prev => {
+      const history = prev[taskId] || [];
+      return { ...prev, [taskId]: [...history, { role: 'user', content: message }] };
     });
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || `API error (${response.status})`);
-    }
+    try {
+      const currentHistory = taskChatHistory[taskId] || [];
+      const data = await taskChatOnServer(task, message, currentHistory, planRef.current.context);
 
-    const data = await response.json();
+      // Add assistant response
+      setTaskChatHistory(prev => {
+        const history = prev[taskId] || [];
+        return { ...prev, [taskId]: [...history, { role: 'assistant', content: data.response }] };
+      });
 
-    // Add assistant response to history
-    taskChatHistory[taskId].push({ role: 'assistant', content: data.response });
-
-    // If the task was updated, merge changes back into the plan
-    if (data.descriptionChanged && data.updatedTask) {
-      const taskIndex = plan.tasks.findIndex(t => t.id === taskId);
-      if (taskIndex !== -1) {
-        // Only update safe fields
+      // Merge safe fields if description changed
+      if (data.descriptionChanged && data.updatedTask) {
         const safe = ['description', 'notes', 'materials', 'estimatedTime', 'cost'];
+        const updates = {};
         safe.forEach(field => {
           if (data.updatedTask[field] !== undefined) {
-            plan.tasks[taskIndex][field] = data.updatedTask[field];
+            updates[field] = data.updatedTask[field];
           }
         });
-        plan.lastUpdated = getToday();
-
-        // Persist the plan change
-        await savePlan();
-
-        // Flash the description panel to indicate update
-        renderTaskChatDesc(plan.tasks[taskIndex]);
-        const descEl = document.getElementById('taskChatDesc');
-        descEl.classList.add('updated');
-        setTimeout(() => descEl.classList.remove('updated'), 1500);
+        setPlan(prev => {
+          if (!prev) return prev;
+          const idx = prev.tasks.findIndex(t => t.id === taskId);
+          if (idx === -1) return prev;
+          const newTasks = [...prev.tasks];
+          newTasks[idx] = { ...newTasks[idx], ...updates };
+          const newPlan = { ...prev, tasks: newTasks, lastUpdated: getToday() };
+          savePlanToServer(newPlan);
+          return newPlan;
+        });
       }
+
+      return data;
+    } catch (err) {
+      setTaskChatHistory(prev => {
+        const history = prev[taskId] || [];
+        return { ...prev, [taskId]: [...history, { role: 'assistant', content: 'Sorry, something went wrong: ' + err.message }] };
+      });
+      return null;
     }
-  } catch (err) {
-    // Add error as a system message
-    taskChatHistory[taskId].push({
-      role: 'assistant',
-      content: 'Sorry, something went wrong: ' + err.message,
-    });
-  } finally {
-    // Remove typing indicator and re-render
-    if (typingEl.parentNode) typingEl.remove();
-    taskChatLoading = false;
-    document.getElementById('taskChatSend').disabled = false;
-    renderTaskChatMessages(taskId);
+  }, [taskChatHistory]);
+
+  // --- RENDER ---
+  if (!plan) {
+    return html`<${LoadingOverlay} visible=${true} text="Loading your plan..." />`;
   }
+
+  // Route matching
+  const taskMatch = route.match(/^#\/task\/(.+)$/);
+
+  return html`
+    <${Toast} toast=${toast} onDismiss=${dismissToast} />
+    <${LoadingOverlay} visible=${isLoading && !!plan} text=${loadingText} />
+
+    ${taskMatch
+      ? html`<${TaskDetail}
+                taskId=${taskMatch[1]}
+                plan=${plan}
+                chatHistory=${taskChatHistory}
+                onUpdateTask=${updateTask}
+                onSendTaskChat=${sendTaskChat}
+                onNavigate=${navigate}
+              />`
+      : html`<${Dashboard}
+                plan=${plan}
+                isLoading=${isLoading}
+                versions=${versions}
+                toast=${toast}
+                collapsed=${collapsed}
+                lastUndoTimestamp=${lastUndoTimestamp}
+                onSendMessage=${handleSendMessage}
+                onQuickAction=${quickAction}
+                onToggleCard=${toggleCard}
+                onRestoreVersion=${restoreVersion}
+                onQuickUndo=${quickUndo}
+                onDismissToast=${dismissToast}
+                onNavigate=${navigate}
+                chatInputRef=${chatInputRef}
+                chatInputValue=${chatInputValue}
+                onChatInputChange=${setChatInputValue}
+              />`
+    }
+  `;
 }
 
-// Boot
-init();
+// =====================================================
+// MOUNT
+// =====================================================
+render(html`<${App} />`, document.getElementById('app'));
 </script>
 </body>
 </html>
