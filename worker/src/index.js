@@ -2,9 +2,9 @@
 // Proxies natural language plan updates to Claude via the Anthropic API
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL = 'claude-opus-4-6';           // revise-plan: complex full-plan reasoning
+const MODEL = 'claude-sonnet-4-5';         // revise-plan: fast enough to avoid Cloudflare 30s timeout
 const TASK_CHAT_MODEL = 'claude-sonnet-4-5'; // task-chat: faster, sufficient for single-task Q&A
-const MAX_TOKENS = 8192;           // revise-plan: returns entire plan JSON
+const MAX_TOKENS = 4096;           // revise-plan: full plan JSON (4096 is sufficient, caps generation time)
 const TASK_CHAT_MAX_TOKENS = 2048; // task-chat: one task object + short reply
 const DAILY_RATE_LIMIT = 20;
 
@@ -179,17 +179,12 @@ async function handleRevisePlan(request, env, headers) {
       );
     }
 
-    const userPrompt = `Today's date: ${clientToday || today}
-
-Current plan state:
-${JSON.stringify(currentPlan)}
-
-Recent activity (last 10 interactions):
-${JSON.stringify(activityLog || [])}
-
-User message: "${message}"
-
-Revise the plan as needed and respond.`;
+    // Build system prompt with plan context embedded once (reduces input tokens)
+    const systemWithContext =
+      SYSTEM_PROMPT +
+      `\n\nToday's date: ${clientToday || today}` +
+      `\n\nCurrent plan state:\n${JSON.stringify(currentPlan)}` +
+      `\n\nRecent activity (last 10 interactions):\n${JSON.stringify(activityLog || [])}`;
 
     // Call Anthropic API
     const anthropicResponse = await fetch(ANTHROPIC_API_URL, {
@@ -202,8 +197,8 @@ Revise the plan as needed and respond.`;
       body: JSON.stringify({
         model: MODEL,
         max_tokens: MAX_TOKENS,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userPrompt }],
+        system: systemWithContext,
+        messages: [{ role: 'user', content: message }],
       }),
     });
 
