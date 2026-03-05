@@ -2088,10 +2088,10 @@ function App() {
     try {
       const data = await revisePlanOnServer(message, planRef.current);
 
-      if (data.revisedPlan) {
-        // Preserve userNotes from current plan (client-side safety)
-        if (planRef.current.tasks) {
-          for (const task of data.revisedPlan.tasks) {
+      if (data.mergedPlan) {
+        // Preserve userNotes from current plan (client-side safety net)
+        if (planRef.current.tasks && data.mergedPlan.tasks) {
+          for (const task of data.mergedPlan.tasks) {
             const original = planRef.current.tasks.find(t => t.id === task.id);
             if (original && original.userNotes !== undefined) {
               task.userNotes = original.userNotes;
@@ -2106,10 +2106,10 @@ function App() {
           response: data.response || '',
           changes: data.changes || [],
         });
-        data.revisedPlan.activityLog = currentLog;
-        data.revisedPlan.lastUpdated = getToday();
-        setPlan(data.revisedPlan);
-        await savePlanToServer(data.revisedPlan);
+        data.mergedPlan.activityLog = currentLog;
+        data.mergedPlan.lastUpdated = getToday();
+        setPlan(data.mergedPlan);
+        await savePlanToServer(data.mergedPlan);
       }
 
       setToast({ response: data.response || 'Plan updated.', changes: data.changes || [] });

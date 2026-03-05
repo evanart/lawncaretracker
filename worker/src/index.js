@@ -4,15 +4,15 @@
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const MODEL = 'claude-sonnet-4-5';         // revise-plan: fast enough to avoid Cloudflare 30s timeout
 const TASK_CHAT_MODEL = 'claude-sonnet-4-5'; // task-chat: faster, sufficient for single-task Q&A
-const MAX_TOKENS = 4096;           // revise-plan: full plan JSON (4096 is sufficient, caps generation time)
+const MAX_TOKENS = 8192;           // revise-plan: patch responses are small, but leave headroom for multi-task adds
 const TASK_CHAT_MAX_TOKENS = 2048; // task-chat: one task object + short reply
 const DAILY_RATE_LIMIT = 20;
 
 const SYSTEM_PROMPT = `You are a lawn care planning assistant managing a spring lawn care schedule for a homeowner in Fuquay-Varina, NC with Bermuda grass. You receive the current plan state as JSON and a natural language message from the user.
 
-Your job is to interpret the message and respond in two ways:
-1. Update the plan JSON if any changes are needed
-2. Provide a brief, friendly conversational response
+Your job is to interpret the message and respond with:
+1. A patch object describing ONLY the changes to the plan (if any)
+2. A brief, friendly conversational response
 
 TYPES OF MESSAGES YOU MAY RECEIVE:
 - Task completion ("finished the cleanup", "done with the EWF")
@@ -25,23 +25,41 @@ TYPES OF MESSAGES YOU MAY RECEIVE:
 
 PLAN MODIFICATION RULES:
 - When rescheduling: push to the next available weekend. Cascade dependent tasks. Never stack two major projects (3+ hours) on the same weekend.
-- When adding tasks: generate a full task object with id, title, description, targetDate, deadline, estimatedTime, materials, cost, dependencies, phase, and notes. Place it logically in the timeline. Set userNotes to "" for new tasks.
+- When adding tasks: generate a full task object with all required fields. Place it logically in the timeline. Set userNotes to "" for new tasks.
 - When updating decisions: add to the decisions array with today's date.
 - When receiving information (quotes, soil results, etc.): update the relevant task's notes and cost fields, and add to context if broadly relevant.
 - When answering questions: provide helpful advice in your response. Only modify the plan if the answer implies an action.
 - Leapfrog-managed tasks: don't reschedule unless the user says Leapfrog changed the date.
 - Scalp mow constraint: can only happen late March through mid April when Bermuda is greening.
-- Always recalculate summary stats (budget, completion count) when the plan changes.
-- NEVER modify the activityLog array. Return it exactly as received. The client handles activity logging separately.
-- NEVER modify the userNotes field on any task. This is the user's personal notes and must be preserved exactly as-is.
+- NEVER include activityLog in your response. The client manages activity logging separately.
+- NEVER include or modify userNotes on existing tasks. Only set userNotes to "" on brand new tasks.
 - Format task descriptions using markdown for readability. Use headers (##, ###) for sections, bullet lists for steps, **bold** for emphasis, and \`code\` for specific commands or product names.
 
 RESPONSE FORMAT — Respond with ONLY a valid JSON object:
 {
-  "revisedPlan": { /* the full updated plan JSON — always return the complete object even if only small changes were made */ },
-  "response": "A brief, friendly 1-3 sentence response to the user. Be conversational, not robotic. Reference specific tasks or dates when relevant. If nothing changed, just acknowledge what they said.",
-  "changes": ["Human-readable list of each change made to the plan, one per array item. Empty array if no changes."]
+  "patch": {
+    "tasks": {
+      "update": { "<taskId>": { /* only changed fields */ }, ... },
+      "add": [ { /* full new task object with all fields */ }, ... ],
+      "remove": [ "<taskId>", ... ]
+    },
+    "decisions": {
+      "add": [ { "date": "...", "decision": "...", "notes": "..." }, ... ]
+    },
+    "context": { /* only changed context fields — shallow merge */ }
+  },
+  "response": "A brief, friendly 1-3 sentence response. Be conversational, not robotic. Reference specific tasks or dates when relevant.",
+  "changes": ["Human-readable list of each change made, one per array item. Empty array if no changes."]
 }
+
+PATCH RULES:
+- "patch" must be an object. Omit any section (tasks, decisions, context) if nothing changed there.
+- In tasks.update, use the task ID as the key. Include ONLY fields that changed — do NOT repeat unchanged fields like description or materials.
+- In tasks.add, include the complete task object with all fields (id, title, description, targetDate, deadline, estimatedTime, status, diyOrPro, materials, cost, dependsOn, phase, weekend, notes, userNotes, constraints).
+- In tasks.remove, list task IDs to delete.
+- In decisions.add, list new decision objects to append.
+- In context, include only the keys that changed (shallow merge).
+- If the user just asked a question and nothing changed, set "patch" to {}.
 
 Do not include any text outside the JSON object. Do not wrap in markdown code fences.`;
 
@@ -212,6 +230,16 @@ async function handleRevisePlan(request, env, headers) {
     }
 
     const anthropicData = await anthropicResponse.json();
+
+    // Check for truncated response before attempting to parse
+    if (anthropicData.stop_reason === 'max_tokens') {
+      console.error('Claude response truncated (hit max_tokens)');
+      return new Response(
+        JSON.stringify({ error: 'AI response was truncated. Please try a simpler request.' }),
+        { status: 502, headers }
+      );
+    }
+
     const rawContent = anthropicData.content?.[0]?.text;
 
     if (!rawContent) {
@@ -234,17 +262,10 @@ async function handleRevisePlan(request, env, headers) {
       );
     }
 
-    // Save a version snapshot of the pre-revision plan, then persist the revised plan
-    if (parsed.revisedPlan) {
-      // Preserve userNotes from the current plan — AI must never overwrite these
-      if (parsed.revisedPlan.tasks && currentPlan.tasks) {
-        for (const task of parsed.revisedPlan.tasks) {
-          const original = currentPlan.tasks.find(t => t.id === task.id);
-          if (original && original.userNotes !== undefined) {
-            task.userNotes = original.userNotes;
-          }
-        }
-      }
+    // Apply patch to produce merged plan
+    let mergedPlan = currentPlan;
+    if (parsed.patch && Object.keys(parsed.patch).length > 0) {
+      mergedPlan = applyPatch(currentPlan, parsed.patch);
 
       try {
         // Snapshot the plan as it was BEFORE the AI changed it (so undo restores this)
@@ -259,14 +280,19 @@ async function handleRevisePlan(request, env, headers) {
       }
 
       try {
-        await env.LAWN_PLAN.put(KV_KEY, JSON.stringify(parsed.revisedPlan));
+        await env.LAWN_PLAN.put(KV_KEY, JSON.stringify(mergedPlan));
       } catch (kvErr) {
         console.error('KV write after revision failed:', kvErr);
-        // Non-fatal — the response still contains the plan
+        // Non-fatal — the response still contains the merged plan
       }
     }
 
-    return new Response(JSON.stringify(parsed), { headers });
+    return new Response(JSON.stringify({
+      patch: parsed.patch || {},
+      mergedPlan,
+      response: parsed.response,
+      changes: parsed.changes || [],
+    }), { headers });
   } catch (err) {
     console.error('Worker error:', err);
     return new Response(
@@ -376,6 +402,64 @@ async function handleTaskChat(request, env, headers) {
       { status: 500, headers }
     );
   }
+}
+
+// --- Patch merge helper ---
+
+function applyPatch(currentPlan, patch) {
+  if (!patch || Object.keys(patch).length === 0) {
+    return currentPlan;
+  }
+
+  const merged = { ...currentPlan };
+
+  // --- Tasks ---
+  if (patch.tasks) {
+    let tasks = [...(currentPlan.tasks || [])];
+
+    // Remove tasks
+    if (patch.tasks.remove && patch.tasks.remove.length > 0) {
+      const removeSet = new Set(patch.tasks.remove);
+      tasks = tasks.filter(t => !removeSet.has(t.id));
+    }
+
+    // Update existing tasks (field-level merge)
+    if (patch.tasks.update) {
+      for (const [taskId, fields] of Object.entries(patch.tasks.update)) {
+        const idx = tasks.findIndex(t => t.id === taskId);
+        if (idx !== -1) {
+          // Strip userNotes — AI must never overwrite user's personal notes
+          const { userNotes, ...safeFields } = fields;
+          tasks[idx] = { ...tasks[idx], ...safeFields };
+        }
+      }
+    }
+
+    // Add new tasks
+    if (patch.tasks.add && patch.tasks.add.length > 0) {
+      for (const newTask of patch.tasks.add) {
+        if (!tasks.some(t => t.id === newTask.id)) {
+          tasks.push(newTask);
+        }
+      }
+    }
+
+    merged.tasks = tasks;
+  }
+
+  // --- Decisions (append-only) ---
+  if (patch.decisions && patch.decisions.add && patch.decisions.add.length > 0) {
+    merged.decisions = [...(currentPlan.decisions || []), ...patch.decisions.add];
+  }
+
+  // --- Context (shallow merge) ---
+  if (patch.context && Object.keys(patch.context).length > 0) {
+    merged.context = { ...(currentPlan.context || {}), ...patch.context };
+  }
+
+  merged.lastUpdated = new Date().toISOString().slice(0, 10);
+
+  return merged;
 }
 
 // --- Version history helpers ---
