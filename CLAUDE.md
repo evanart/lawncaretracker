@@ -81,8 +81,8 @@ All requests require `X-App-Token` header. Base URL: `https://lawn-plan-api.evan
 ## Session Handoff
 
 **Last session:** 2026-03-06
-**Summary:** Overhauled the chat UX across three areas: task chat history now persists to KV (stored in each task's `chatHistory` field, seeded on load, capped at 40 messages, with an Archive button to clear); task chat assistant responses now render with markdown; and the plan-level toast popup was replaced with a toggleable `PlanChatPanel` (green FAB at bottom-right, shows full `activityLog` history with markdown and ✓ changes list).
-**Files changed:** `site/index.html` only (worker unchanged)
-**In progress:** None
-**Next steps:** None identified — all three improvements are shipped and pushed
-**Gotchas:** `chatHistory` field is now present on task objects in KV — any future AI prompt engineering should explicitly exclude it (as `userNotes` already is). The `ChatBar` and `Toast` components were removed; plan chat input now lives entirely inside `PlanChatPanel`.
+**Summary:** Applied a warm & organic visual redesign to `site/index.html`: replaced the cool gray/vivid palette with earth tones (forest green, honey, terracotta, warm taupes), added DM Sans + Alegreya fonts, a green gradient hero with live progress bar, visual timeline connectors (line + color-coded dots), enlarged mobile touch targets, and component polish throughout.
+**Files changed:** `site/index.html` (all CSS and component JS; no worker changes)
+**In progress:** PR #9 open (`claude/gifted-fermi` → `main`), not yet merged
+**Next steps:** Merge PR #9 when satisfied; no functional or backend changes needed
+**Gotchas:** Live KV data uses `not-started` as a status value (not `ready` as in seed data) — CSS must target both `.status-badge.ready, .status-badge.not-started`. Alegreya is intentionally limited to `.hero-next` and `.task-detail-title` only — don't spread it to other headings. The `PlanChatPanel` FAB is now a pill labeled "CHAT" (not an emoji icon).
