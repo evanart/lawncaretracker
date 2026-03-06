@@ -1264,7 +1264,14 @@ input[type="date"].meta-input {
   -webkit-user-select: none;
   user-select: none;
 }
+ph-x, ph-arrow-left, ph-arrow-counter-clockwise, ph-chat-circle, ph-paper-plane-tilt, ph-caret-down {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  pointer-events: none;
+}
 </style>
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1" defer></script>
 </head>
 <body>
 <div id="app"></div>
@@ -1690,7 +1697,7 @@ function PlanChatFAB({ isOpen, onClick }) {
   return html`
     <button class=${"plan-chat-fab" + (isOpen ? " open" : "")} onClick=${onClick}
             title=${isOpen ? "Close chat" : "Open plan chat"}>
-      ${isOpen ? "CLOSE" : "CHAT"}
+      ${isOpen ? html`<ph-x weight="bold" size="20" />` : html`<ph-chat-circle weight="duotone" size="24" />`}
     </button>
   `;
 }
@@ -1717,7 +1724,7 @@ function PlanChatPanel({ plan, isOpen, onClose, onSend, disabled, showUndo, onUn
     <div class=${"plan-chat-panel" + (isOpen ? " open" : "")}>
       <div class="plan-chat-header">
         <div class="plan-chat-header-title">Plan Chat</div>
-        <button class="plan-chat-close" onClick=${onClose}>\u00D7</button>
+        <button class="plan-chat-close" onClick=${onClose}><ph-x weight="bold" size="16" /></button>
       </div>
       <div class="plan-chat-messages" ref=${messagesRef}>
         ${log.length === 0 && !disabled && html`
@@ -1741,7 +1748,7 @@ function PlanChatPanel({ plan, isOpen, onClose, onSend, disabled, showUndo, onUn
       <div class="plan-chat-footer">
         ${showUndo && html`
           <div class="undo-bar visible" style="margin-bottom:8px">
-            <button class="undo-btn" onClick=${onUndo}>\u21BB Undo last change</button>
+            <button class="undo-btn" onClick=${onUndo}>${html`<ph-arrow-counter-clockwise size="14" />`} Undo last change</button>
           </div>
         `}
         <div class="plan-chat-input-row">
@@ -1752,7 +1759,7 @@ function PlanChatPanel({ plan, isOpen, onClose, onSend, disabled, showUndo, onUn
                  value=${inputValue}
                  onInput=${e => { onInputChange(e.target.value); autoResize(e.target); }}
                  onKeyDown=${handleKeyDown}></textarea>
-          <button class="chat-send" disabled=${disabled} onClick=${onSend}>\u25B6</button>
+          <button class="chat-send" disabled=${disabled} onClick=${onSend}><ph-paper-plane-tilt weight="fill" size="18" /></button>
         </div>
       </div>
     </div>
@@ -1763,7 +1770,7 @@ function CollapsibleCard({ title, collapsed, onToggle, children }) {
   return html`
     <div class="card">
       <div class=${"card-header" + (collapsed ? " collapsed" : "")} onClick=${onToggle}>
-        ${title} <span class="chevron">\u25BC</span>
+        ${title} <span class="chevron"><ph-caret-down size="16" /></span>
       </div>
       <div class=${"card-body" + (collapsed ? " collapsed" : "")}>
         ${children}
@@ -2155,7 +2162,7 @@ function MaterialsList({ materials, onChange }) {
         <ul class="materials-list">
           ${materials.map((m, i) => html`
             <li class="materials-item" key=${i}>
-              <button class="materials-remove" onClick=${() => removeItem(i)}>\u00D7</button>
+              <button class="materials-remove" onClick=${() => removeItem(i)}><ph-x size="14" /></button>
               <span>${m}</span>
             </li>
           `)}
@@ -2231,7 +2238,7 @@ function TaskChatSection({ taskId, plan, chatHistory, onSendChat, onClearHistory
                    send();
                  }
                }}></textarea>
-        <button class="chat-send" disabled=${loading} onClick=${send}>\u25B6</button>
+        <button class="chat-send" disabled=${loading} onClick=${send}><ph-paper-plane-tilt weight="fill" size="18" /></button>
       </div>
     </div>
   `;
@@ -2256,7 +2263,7 @@ function TaskDetail({ taskId, plan, chatHistory, onUpdateTask, onSendTaskChat, o
   if (!task) {
     return html`
       <div class="task-detail-page page-enter">
-        <button class="task-detail-back" onClick=${() => onNavigate('#/')}>\u2190 Back</button>
+        <button class="task-detail-back" onClick=${() => onNavigate('#/')}>${html`<ph-arrow-left size="16" />`} Back</button>
         <div class="empty-state">Task not found.</div>
       </div>
     `;
@@ -2281,7 +2288,7 @@ function TaskDetail({ taskId, plan, chatHistory, onUpdateTask, onSendTaskChat, o
 
   return html`
     <div class="task-detail-page page-enter">
-      <button class="task-detail-back" onClick=${() => onNavigate('#/')}>\u2190 Back to dashboard</button>
+      <button class="task-detail-back" onClick=${() => onNavigate('#/')}>${html`<ph-arrow-left size="16" />`} Back to dashboard</button>
 
       <div class="task-detail-header">
         <div class="task-detail-title">
