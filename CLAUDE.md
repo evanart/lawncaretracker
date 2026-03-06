@@ -81,8 +81,8 @@ All requests require `X-App-Token` header. Base URL: `https://lawn-plan-api.evan
 ## Session Handoff
 
 **Last session:** 2026-03-06
-**Summary:** Applied a warm & organic visual redesign to `site/index.html`: replaced the cool gray/vivid palette with earth tones (forest green, honey, terracotta, warm taupes), added DM Sans + Alegreya fonts, a green gradient hero with live progress bar, visual timeline connectors (line + color-coded dots), enlarged mobile touch targets, and component polish throughout.
-**Files changed:** `site/index.html` (all CSS and component JS; no worker changes)
-**In progress:** PR #9 open (`claude/gifted-fermi` → `main`), not yet merged
-**Next steps:** Merge PR #9 when satisfied; no functional or backend changes needed
-**Gotchas:** Live KV data uses `not-started` as a status value (not `ready` as in seed data) — CSS must target both `.status-badge.ready, .status-badge.not-started`. Alegreya is intentionally limited to `.hero-next` and `.task-detail-title` only — don't spread it to other headings. The `PlanChatPanel` FAB is now a pill labeled "CHAT" (not an emoji icon).
+**Summary:** Fixed timeline task ordering — new tasks added via AI were appending to the bottom instead of appearing in chronological position. `TimelineCard` now sorts tasks by `targetDate` before grouping, so both group order and within-group order are chronological.
+**Files changed:** `site/index.html` only (4-line change in `TimelineCard`)
+**In progress:** None
+**Next steps:** None identified
+**Gotchas:** Tasks without a `targetDate` sort to the bottom (fall into "Unscheduled" group) — this is intentional. Live KV data uses `not-started` as a status value (not `ready` as in seed data) — CSS must target both `.status-badge.ready, .status-badge.not-started`.

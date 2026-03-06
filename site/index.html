@@ -1895,7 +1895,10 @@ function VersionHistoryCard({ versions, onRestore }) {
 
 function TimelineCard({ plan, onNavigate, onUpdateTask }) {
   const groups = {};
-  plan.tasks.forEach(t => {
+  const sorted = [...plan.tasks].sort((a, b) =>
+    (a.targetDate || '9999-99-99').localeCompare(b.targetDate || '9999-99-99')
+  );
+  sorted.forEach(t => {
     const key = t.weekend || 'Unscheduled';
     if (!groups[key]) groups[key] = [];
     groups[key].push(t);
