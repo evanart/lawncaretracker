@@ -73,16 +73,16 @@ All requests require `X-App-Token` header. Base URL: `https://lawn-plan-api.evan
 
 ## Active Work / Known Issues
 
+- Task `chatHistory` is now stored as a field on each task object in KV — AI prompts don't include it, only the frontend chat UI uses it
 - Recent refactor: switched revise-plan to patch-based responses (reduces tokens, prevents truncation)
 - Fixed 502 timeouts on revise-plan and task-chat by switching to Sonnet and optimizing payload size
 - No formal test framework — manual testing only
 
 ## Session Handoff
 
-```
-**Last session:** 2026-03-05
-**Summary:** Added project documentation (CLAUDE.md, per-directory READMEs, architecture decisions)
+**Last session:** 2026-03-06
+**Summary:** Overhauled the chat UX across three areas: task chat history now persists to KV (stored in each task's `chatHistory` field, seeded on load, capped at 40 messages, with an Archive button to clear); task chat assistant responses now render with markdown; and the plan-level toast popup was replaced with a toggleable `PlanChatPanel` (green FAB at bottom-right, shows full `activityLog` history with markdown and ✓ changes list).
+**Files changed:** `site/index.html` only (worker unchanged)
 **In progress:** None
-**Next steps:** None identified
-**Gotchas:** None
-```
+**Next steps:** None identified — all three improvements are shipped and pushed
+**Gotchas:** `chatHistory` field is now present on task objects in KV — any future AI prompt engineering should explicitly exclude it (as `userNotes` already is). The `ChatBar` and `Toast` components were removed; plan chat input now lives entirely inside `PlanChatPanel`.
