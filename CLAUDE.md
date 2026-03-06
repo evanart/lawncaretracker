@@ -81,8 +81,8 @@ All requests require `X-App-Token` header. Base URL: `https://lawn-plan-api.evan
 ## Session Handoff
 
 **Last session:** 2026-03-06
-**Summary:** Fixed timeline task ordering — new tasks added via AI were appending to the bottom instead of appearing in chronological position. `TimelineCard` now sorts tasks by `targetDate` before grouping, so both group order and within-group order are chronological.
-**Files changed:** `site/index.html` only (4-line change in `TimelineCard`)
+**Summary:** Replaced all Unicode/emoji icons with Phosphor Icons web components loaded via CDN (`@phosphor-icons/web@2.1.1`). Icons replaced: 💬 FAB → `ph-chat-circle` (duotone), × close/remove → `ph-x` (bold), ▶ send → `ph-paper-plane-tilt` (fill), ▼ chevron → `ph-caret-down`, ← back → `ph-arrow-left`, ↻ undo → `ph-arrow-counter-clockwise`. CSS ✓ pseudo-element left as-is.
+**Files changed:** `site/index.html` only (script tag in head, CSS alignment rule, 9 icon substitutions in JS)
 **In progress:** None
 **Next steps:** None identified
-**Gotchas:** Tasks without a `targetDate` sort to the bottom (fall into "Unscheduled" group) — this is intentional. Live KV data uses `not-started` as a status value (not `ready` as in seed data) — CSS must target both `.status-badge.ready, .status-badge.not-started`.
+**Gotchas:** Phosphor loads via `<script defer>` before the `<script type="module">` — execution order relies on both being deferred and appearing in document order. The CSS ✓ in `.plan-chat-changes li::before` cannot use web components and was intentionally left as Unicode.
