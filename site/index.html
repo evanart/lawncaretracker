@@ -149,48 +149,70 @@ body {
 .btn-done { background: var(--green); color: white; }
 .btn-skip { background: var(--gray-100); color: var(--gray-700); }
 
-/* AI Response Toast */
-.ai-toast {
+/* Plan Chat Panel + FAB */
+.plan-chat-fab {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  padding: 16px;
-  transform: translateY(-100%);
-  transition: transform 0.3s ease;
-}
-.ai-toast.visible { transform: translateY(0); }
-.ai-toast-inner {
-  background: white;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
-  padding: 16px;
-  border-left: 4px solid var(--green);
-  max-height: 60vh;
-  overflow-y: auto;
-  position: relative;
-}
-.ai-toast-response {
-  font-size: 15px;
-  color: var(--gray-700);
-  margin-bottom: 8px;
-  line-height: 1.5;
-  padding-right: 32px;
-}
-.ai-toast-changes {
-  font-size: 12px;
-  color: var(--gray-500);
-}
-.ai-toast-changes li { margin-bottom: 2px; }
-.ai-toast-dismiss {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: var(--gray-200);
+  bottom: 20px;
+  right: 20px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--green);
+  color: white;
   border: none;
-  width: 28px;
-  height: 28px;
+  font-size: 22px;
+  line-height: 1;
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  z-index: 51;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.2s;
+}
+.plan-chat-fab:hover { background: #16a34a; }
+.plan-chat-fab.open { background: var(--gray-400); font-size: 18px; }
+.plan-chat-panel {
+  position: fixed;
+  bottom: 84px;
+  right: 16px;
+  width: 380px;
+  max-height: 62vh;
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  transform: translateY(16px);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  z-index: 50;
+  overflow: hidden;
+}
+.plan-chat-panel.open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: all;
+}
+.plan-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--gray-100);
+  flex-shrink: 0;
+}
+.plan-chat-header-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+.plan-chat-close {
+  background: var(--gray-100);
+  border: none;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   cursor: pointer;
   font-size: 14px;
@@ -198,6 +220,78 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.plan-chat-close:hover { background: var(--gray-200); }
+.plan-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.plan-chat-exchange { display: flex; flex-direction: column; gap: 6px; }
+.plan-chat-msg {
+  max-width: 88%;
+  padding: 9px 13px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+.plan-chat-msg.user {
+  align-self: flex-end;
+  background: var(--green);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+.plan-chat-msg.assistant {
+  align-self: flex-start;
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border-bottom-left-radius: 4px;
+}
+.plan-chat-msg.assistant .markdown-content { color: inherit; }
+.plan-chat-msg.assistant .markdown-content p:last-child { margin-bottom: 0; }
+.plan-chat-changes {
+  align-self: flex-start;
+  font-size: 11px;
+  color: var(--gray-400);
+  padding-left: 4px;
+  margin: 0;
+  list-style: none;
+}
+.plan-chat-changes li::before { content: "✓ "; color: var(--green); }
+.plan-chat-changes li { margin-bottom: 2px; }
+.plan-chat-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--gray-400);
+  font-size: 13px;
+  line-height: 1.6;
+  flex: 1;
+}
+.plan-chat-typing {
+  align-self: flex-start;
+  padding: 9px 13px;
+  background: var(--gray-100);
+  border-radius: 12px;
+  border-bottom-left-radius: 4px;
+  font-size: 14px;
+  color: var(--gray-400);
+}
+.plan-chat-footer {
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--gray-100);
+  flex-shrink: 0;
+}
+.plan-chat-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+@media (max-width: 440px) {
+  .plan-chat-panel { left: 8px; right: 8px; width: auto; bottom: 80px; }
 }
 
 /* Timeline */
@@ -912,6 +1006,21 @@ input[type="date"].meta-input {
   display: flex;
   gap: 8px;
 }
+.task-chat-msg.assistant .markdown-content { color: inherit; }
+.task-chat-msg.assistant .markdown-content p:last-child { margin-bottom: 0; }
+.task-chat-msg.assistant .markdown-content ul,
+.task-chat-msg.assistant .markdown-content ol { margin-bottom: 0; }
+.task-chat-clear {
+  font-size: 11px;
+  color: var(--gray-400);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: auto;
+}
+.task-chat-clear:hover { color: var(--gray-600); background: var(--gray-100); }
 
 /* Route transition */
 .page-enter {
@@ -1343,18 +1452,74 @@ function LoadingOverlay({ visible, text }) {
   `;
 }
 
-function Toast({ toast, onDismiss }) {
-  if (!toast) return html`<div class="ai-toast" />`;
+function PlanChatFAB({ isOpen, onClick }) {
   return html`
-    <div class=${"ai-toast" + (toast ? " visible" : "")}>
-      <div class="ai-toast-inner">
-        <button class="ai-toast-dismiss" onClick=${onDismiss}>\u00D7</button>
-        <div class="ai-toast-response">${toast.response}</div>
-        ${toast.changes && toast.changes.length > 0 && html`
-          <ul class="ai-toast-changes">
-            ${toast.changes.map(c => html`<li>${c}</li>`)}
-          </ul>
+    <button class=${"plan-chat-fab" + (isOpen ? " open" : "")} onClick=${onClick}
+            title=${isOpen ? "Close chat" : "Open plan chat"}>
+      ${isOpen ? "\u00D7" : "\uD83D\uDCAC"}
+    </button>
+  `;
+}
+
+function PlanChatPanel({ plan, isOpen, onClose, onSend, disabled, showUndo, onUndo, inputRef, inputValue, onInputChange }) {
+  const messagesRef = useRef(null);
+  const log = plan ? (plan.activityLog || []) : [];
+
+  useEffect(() => {
+    if (isOpen && messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+    }
+  }, [isOpen, log.length, disabled]);
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (inputRef && inputRef.current) inputRef.current.style.height = 'auto';
+      onSend();
+    }
+  };
+
+  return html`
+    <div class=${"plan-chat-panel" + (isOpen ? " open" : "")}>
+      <div class="plan-chat-header">
+        <div class="plan-chat-header-title">Plan Chat</div>
+        <button class="plan-chat-close" onClick=${onClose}>\u00D7</button>
+      </div>
+      <div class="plan-chat-messages" ref=${messagesRef}>
+        ${log.length === 0 && !disabled && html`
+          <div class="plan-chat-empty">Tell me what's happening with your lawn and I'll update the plan.</div>
         `}
+        ${log.map((entry, i) => html`
+          <div class="plan-chat-exchange" key=${i}>
+            <div class="plan-chat-msg user">${entry.userMessage}</div>
+            <div class="plan-chat-msg assistant">
+              <${MarkdownContent} text=${entry.response} />
+            </div>
+            ${entry.changes && entry.changes.length > 0 && html`
+              <ul class="plan-chat-changes">
+                ${entry.changes.map(c => html`<li key=${c}>${c}</li>`)}
+              </ul>
+            `}
+          </div>
+        `)}
+        ${disabled && html`<div class="plan-chat-typing">Thinking...</div>`}
+      </div>
+      <div class="plan-chat-footer">
+        ${showUndo && html`
+          <div class="undo-bar visible" style="margin-bottom:8px">
+            <button class="undo-btn" onClick=${onUndo}>\u21BB Undo last change</button>
+          </div>
+        `}
+        <div class="plan-chat-input-row">
+          <textarea class="chat-input" ref=${inputRef}
+                 placeholder="Tell me what's happening..."
+                 autocomplete="off" disabled=${disabled}
+                 rows="1"
+                 value=${inputValue}
+                 onInput=${e => { onInputChange(e.target.value); autoResize(e.target); }}
+                 onKeyDown=${handleKeyDown}></textarea>
+          <button class="chat-send" disabled=${disabled} onClick=${onSend}>\u25B6</button>
+        </div>
       </div>
     </div>
   `;
@@ -1532,44 +1697,8 @@ function DecisionCard({ plan }) {
   `;
 }
 
-function ChatBar({ onSend, disabled, placeholder, showUndo, onUndo, inputRef, inputValue, onInputChange }) {
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      onSend();
-      if (inputRef && inputRef.current) {
-        inputRef.current.style.height = 'auto';
-      }
-    }
-  };
-
-  return html`
-    <div class="chat-bar">
-      <div class="chat-bar-inner">
-      ${showUndo && html`
-        <div class="undo-bar visible">
-          <button class="undo-btn" onClick=${onUndo}>\u21BB Undo last change</button>
-        </div>
-      `}
-      <div style="display:flex;gap:8px;align-items:flex-end">
-        <textarea class="chat-input" ref=${inputRef}
-               placeholder=${placeholder || "Tell me what's happening..."}
-               autocomplete="off" disabled=${disabled}
-               rows="1"
-               value=${inputValue}
-               onInput=${e => { onInputChange(e.target.value); autoResize(e.target); }}
-               onKeyDown=${handleKeyDown}></textarea>
-        <button class="chat-send" disabled=${disabled} onClick=${onSend}>\u25B6</button>
-      </div>
-      </div>
-    </div>
-  `;
-}
-
-function Dashboard({ plan, isLoading, versions, toast, collapsed, lastUndoTimestamp,
-                      onSendMessage, onToggleCard, onRestoreVersion,
-                      onQuickUndo, onDismissToast, onNavigate, onUpdateTask,
-                      chatInputRef, chatInputValue, onChatInputChange }) {
+function Dashboard({ plan, versions, collapsed,
+                      onToggleCard, onRestoreVersion, onNavigate, onUpdateTask }) {
   return html`
     <div class="page-enter">
       <${Hero} plan=${plan} />
@@ -1597,16 +1726,6 @@ function Dashboard({ plan, isLoading, versions, toast, collapsed, lastUndoTimest
           <${VersionHistoryCard} versions=${versions} onRestore=${onRestoreVersion} />
         <//>
       </div>
-
-      <${ChatBar}
-        onSend=${onSendMessage}
-        disabled=${isLoading}
-        showUndo=${!!lastUndoTimestamp}
-        onUndo=${onQuickUndo}
-        inputRef=${chatInputRef}
-        inputValue=${chatInputValue}
-        onInputChange=${onChatInputChange}
-      />
     </div>
   `;
 }
@@ -1806,7 +1925,7 @@ function MaterialsList({ materials, onChange }) {
   `;
 }
 
-function TaskChatSection({ taskId, plan, chatHistory, onSendChat }) {
+function TaskChatSection({ taskId, plan, chatHistory, onSendChat, onClearHistory }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesRef = useRef(null);
@@ -1827,17 +1946,29 @@ function TaskChatSection({ taskId, plan, chatHistory, onSendChat }) {
     setLoading(false);
   };
 
+  const handleClear = () => {
+    if (confirm('Clear this task\'s chat history?')) onClearHistory(taskId);
+  };
+
   return html`
     <div class="td-section">
       <div class="td-section-header">
         <div class="td-section-title">Chat about this task</div>
+        ${history.length > 0 && html`
+          <button class="task-chat-clear" onClick=${handleClear}>Archive</button>
+        `}
       </div>
       <div class="task-chat-messages" ref=${messagesRef}>
         ${history.length === 0 && !loading && html`
           <div class="task-chat-empty">Ask a question about this task or request changes to the description.</div>
         `}
         ${history.map((msg, i) => html`
-          <div class=${"task-chat-msg " + msg.role} key=${i}>${msg.content}</div>
+          <div class=${"task-chat-msg " + msg.role} key=${i}>
+            ${msg.role === 'assistant'
+              ? html`<${MarkdownContent} text=${msg.content} />`
+              : msg.content
+            }
+          </div>
         `)}
         ${loading && html`<div class="task-chat-typing">Thinking...</div>`}
       </div>
@@ -1860,7 +1991,7 @@ function TaskChatSection({ taskId, plan, chatHistory, onSendChat }) {
   `;
 }
 
-function TaskDetail({ taskId, plan, chatHistory, onUpdateTask, onSendTaskChat, onNavigate }) {
+function TaskDetail({ taskId, plan, chatHistory, onUpdateTask, onSendTaskChat, onClearTaskHistory, onNavigate }) {
   const task = plan.tasks.find(t => t.id === taskId);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
@@ -1980,6 +2111,7 @@ function TaskDetail({ taskId, plan, chatHistory, onUpdateTask, onSendTaskChat, o
         plan=${plan}
         chatHistory=${chatHistory}
         onSendChat=${handleSendChat}
+        onClearHistory=${onClearTaskHistory}
       />
     </div>
   `;
@@ -1992,7 +2124,7 @@ function App() {
   const [plan, setPlan] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState('Loading your plan...');
-  const [toast, setToast] = useState(null);
+  const [chatPanelOpen, setChatPanelOpen] = useState(false);
   const [versions, setVersions] = useState([]);
   const [lastUndoTimestamp, setLastUndoTimestamp] = useState(null);
   const [taskChatHistory, setTaskChatHistory] = useState({});
@@ -2038,6 +2170,14 @@ function App() {
       }
 
       setPlan(loadedPlan);
+      // Initialize task chat history from persisted plan data
+      const chatHistoryInit = {};
+      (loadedPlan.tasks || []).forEach(task => {
+        if (task.chatHistory && task.chatHistory.length > 0) {
+          chatHistoryInit[task.id] = task.chatHistory;
+        }
+      });
+      setTaskChatHistory(chatHistoryInit);
       setIsLoading(false);
 
       const vs = await fetchVersionsFromServer();
@@ -2059,8 +2199,8 @@ function App() {
     setCollapsed(prev => ({ ...prev, [name]: !prev[name] }));
   }, []);
 
-  // Dismiss toast
-  const dismissToast = useCallback(() => setToast(null), []);
+  // Toggle plan chat panel
+  const toggleChatPanel = useCallback(() => setChatPanelOpen(v => !v), []);
 
   // Update a task field (for inline editing)
   const updateTask = useCallback((taskId, updates) => {
@@ -2083,7 +2223,6 @@ function App() {
     setChatInputValue('');
     setIsLoading(true);
     setLoadingText('Updating your plan...');
-    setToast(null);
 
     try {
       const data = await revisePlanOnServer(message, planRef.current);
@@ -2112,7 +2251,8 @@ function App() {
         await savePlanToServer(data.mergedPlan);
       }
 
-      setToast({ response: data.response || 'Plan updated.', changes: data.changes || [] });
+      // Open the chat panel to show the response
+      setChatPanelOpen(true);
 
       const vs = await fetchVersionsFromServer();
       setVersions(vs);
@@ -2149,7 +2289,6 @@ function App() {
       setLastUndoTimestamp(null);
       const vs = await fetchVersionsFromServer();
       setVersions(vs);
-      setToast({ response: 'Plan restored successfully.', changes: [] });
     } catch (err) {
       alert('Restore failed: ' + err.message);
     } finally {
@@ -2162,55 +2301,64 @@ function App() {
     if (lastUndoTimestamp) restoreVersion(lastUndoTimestamp);
   }, [lastUndoTimestamp, restoreVersion]);
 
+  // Clear task chat history
+  const clearTaskHistory = useCallback((taskId) => {
+    setTaskChatHistory(prev => ({ ...prev, [taskId]: [] }));
+    setPlan(prev => {
+      if (!prev) return prev;
+      const idx = prev.tasks.findIndex(t => t.id === taskId);
+      if (idx === -1) return prev;
+      const newTasks = [...prev.tasks];
+      newTasks[idx] = { ...newTasks[idx], chatHistory: [] };
+      const newPlan = { ...prev, tasks: newTasks, lastUpdated: getToday() };
+      savePlanToServer(newPlan);
+      return newPlan;
+    });
+  }, []);
+
   // Send task chat message
   const sendTaskChat = useCallback(async (taskId, message) => {
     if (!planRef.current) return null;
     const task = planRef.current.tasks.find(t => t.id === taskId);
     if (!task) return null;
 
-    // Add user message to history
-    setTaskChatHistory(prev => {
-      const history = prev[taskId] || [];
-      return { ...prev, [taskId]: [...history, { role: 'user', content: message }] };
-    });
+    const userMsg = { role: 'user', content: message };
+    const currentHistory = taskChatHistory[taskId] || [];
+    const historyWithUser = [...currentHistory, userMsg];
+
+    // Show user message immediately
+    setTaskChatHistory(prev => ({ ...prev, [taskId]: historyWithUser }));
 
     try {
-      const currentHistory = taskChatHistory[taskId] || [];
       const data = await taskChatOnServer(task, message, currentHistory, planRef.current.context);
 
-      // Add assistant response
-      setTaskChatHistory(prev => {
-        const history = prev[taskId] || [];
-        return { ...prev, [taskId]: [...history, { role: 'assistant', content: data.response }] };
-      });
+      const assistantMsg = { role: 'assistant', content: data.response };
+      const finalHistory = [...historyWithUser, assistantMsg];
 
-      // Merge safe fields if description changed
-      if (data.descriptionChanged && data.updatedTask) {
-        const safe = ['description', 'notes', 'materials', 'estimatedTime', 'cost'];
-        const updates = {};
-        safe.forEach(field => {
-          if (data.updatedTask[field] !== undefined) {
-            updates[field] = data.updatedTask[field];
-          }
-        });
-        setPlan(prev => {
-          if (!prev) return prev;
-          const idx = prev.tasks.findIndex(t => t.id === taskId);
-          if (idx === -1) return prev;
-          const newTasks = [...prev.tasks];
-          newTasks[idx] = { ...newTasks[idx], ...updates };
-          const newPlan = { ...prev, tasks: newTasks, lastUpdated: getToday() };
-          savePlanToServer(newPlan);
-          return newPlan;
-        });
-      }
+      // Update chat state
+      setTaskChatHistory(prev => ({ ...prev, [taskId]: finalHistory }));
+
+      // Single plan update: persist chat history + optional description changes
+      setPlan(prev => {
+        if (!prev) return prev;
+        const idx = prev.tasks.findIndex(t => t.id === taskId);
+        if (idx === -1) return prev;
+        const newTasks = [...prev.tasks];
+        let updates = { chatHistory: finalHistory.slice(-40) };
+        if (data.descriptionChanged && data.updatedTask) {
+          const safe = ['description', 'notes', 'materials', 'estimatedTime', 'cost'];
+          safe.forEach(f => { if (data.updatedTask[f] !== undefined) updates[f] = data.updatedTask[f]; });
+        }
+        newTasks[idx] = { ...newTasks[idx], ...updates };
+        const newPlan = { ...prev, tasks: newTasks, lastUpdated: getToday() };
+        savePlanToServer(newPlan);
+        return newPlan;
+      });
 
       return data;
     } catch (err) {
-      setTaskChatHistory(prev => {
-        const history = prev[taskId] || [];
-        return { ...prev, [taskId]: [...history, { role: 'assistant', content: 'Sorry, something went wrong: ' + err.message }] };
-      });
+      const errorMsg = { role: 'assistant', content: 'Sorry, something went wrong: ' + err.message };
+      setTaskChatHistory(prev => ({ ...prev, [taskId]: [...historyWithUser, errorMsg] }));
       return null;
     }
   }, [taskChatHistory]);
@@ -2224,7 +2372,6 @@ function App() {
   const taskMatch = route.match(/^#\/task\/(.+)$/);
 
   return html`
-    <${Toast} toast=${toast} onDismiss=${dismissToast} />
     <${LoadingOverlay} visible=${isLoading && !!plan} text=${loadingText} />
 
     ${taskMatch
@@ -2234,27 +2381,33 @@ function App() {
                 chatHistory=${taskChatHistory}
                 onUpdateTask=${updateTask}
                 onSendTaskChat=${sendTaskChat}
+                onClearTaskHistory=${clearTaskHistory}
                 onNavigate=${navigate}
               />`
       : html`<${Dashboard}
                 plan=${plan}
-                isLoading=${isLoading}
                 versions=${versions}
-                toast=${toast}
                 collapsed=${collapsed}
-                lastUndoTimestamp=${lastUndoTimestamp}
-                onSendMessage=${handleSendMessage}
                 onToggleCard=${toggleCard}
                 onUpdateTask=${updateTask}
                 onRestoreVersion=${restoreVersion}
-                onQuickUndo=${quickUndo}
-                onDismissToast=${dismissToast}
                 onNavigate=${navigate}
-                chatInputRef=${chatInputRef}
-                chatInputValue=${chatInputValue}
-                onChatInputChange=${setChatInputValue}
               />`
     }
+
+    <${PlanChatFAB} isOpen=${chatPanelOpen} onClick=${toggleChatPanel} />
+    <${PlanChatPanel}
+      plan=${plan}
+      isOpen=${chatPanelOpen}
+      onClose=${() => setChatPanelOpen(false)}
+      onSend=${handleSendMessage}
+      disabled=${isLoading}
+      showUndo=${!!lastUndoTimestamp}
+      onUndo=${quickUndo}
+      inputRef=${chatInputRef}
+      inputValue=${chatInputValue}
+      onInputChange=${setChatInputValue}
+    />
   `;
 }
 
